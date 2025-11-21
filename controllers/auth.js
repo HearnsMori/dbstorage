@@ -1,8 +1,12 @@
+// to signup, login, or refreshtoken
+// to do in future: to login through forgetpassword
+
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
 const JWT_SECRET = process.env.JWT_SECRET || "ACCESS_SECRET_KEY";
+
+
 const REFRESH_SECRET = process.env.REFRESH_SECRET || "REFRESH_SECRET_KEY";
 
 // =====================

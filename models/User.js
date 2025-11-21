@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
     id: { type: String, required: true },
     password: { type: String, required: true },
     contact: { type: [{ name: String, value: mongoose.Schema.Types.Mixed }] },
-    access: { type: [[String, String, String, []]] } //app, collectionName, key, method
+    access: { type: mongoose.Schema.Types.Mixed } //app, collectionName, key, method
 });
 
 UserSchema.pre('save', async function (next) {

@@ -1,0 +1,101 @@
+dbstorage example usage:
+first signup:
+{
+  "id": "mori",
+  "password": "mori123",
+  "contact": [{"name": "email", "value": "hearnsmori37@gmail.com"}],
+  "access": [["nursync", "user", "mori123", ["set", "get", "remove"]]]
+}
+now login:
+{
+  "id": "mori",
+  "password": "mori123"
+}
+res: accessToken and refreshToken
+
+get /user/read
+
+{
+  "user": {
+    "_id": "6920247021574567199959b5",
+    "id": "mori",
+    "contact": [
+      {
+        "name": "email",
+        "value": "hearnsmori37@gmail.com",
+        "_id": "6920247021574567199959b6"
+      }
+    ],
+    "access": [
+      [
+        "nursync",
+        "user",
+        "mori123",
+        [
+          "set",
+          "get",
+          "remove"
+        ]
+      ]
+    ],
+    "__v": 0
+  }
+}
+
+setItem/getItem/removeItem
+{
+  "app": "nursync",
+  "collectionName": "user",
+  "collectionKey": "mori123",
+  "key": "university",
+  "value": "STI College"
+}
+
+res: 
+{
+  "message": "Items saved/updated successfully",
+  "affected": 1
+}
+
+add-access:
+{
+  "accessEntry": ["nursync", null, null, ["get", "set", "remove"]]
+}
+
+refreshToken: res is accessToken and refreshToken
+
+setItem:
+{
+  "app": "nursync",
+  "collectionName": "other",
+  "collectionKey": "other",
+  "key": "university",
+  "value": "STI College"
+}
+
+res:
+{
+  "message": "Items saved/updated successfully",
+  "affected": 1
+}
+
+setItem:
+{
+  "app": "otherapp",
+  "collectionName": "other",
+  "collectionKey": "other",
+  "key": "university",
+  "value": "STI College"
+}
+
+res:
+{
+  "message": "You do not have 'set' permission for some items.",
+  "denied": [
+    {
+      "app": "otherapp",
+      "collection": "other",
+      "key": "other"
+    }
+  ]
+}

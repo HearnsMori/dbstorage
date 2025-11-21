@@ -1,3 +1,5 @@
+//to set, remove, or get
+
 const Storage = require('../models/Storage'); // Corrected import path
 
 /**
@@ -90,22 +92,86 @@ function generateZippedFilters(body) {
 }
 
 /**
- * Helper: Validates that the user has required permission
+ * Checks if any access rule in userAccess grants the specific permission (perm)
+ * for the given data item (item). 'null' or an empty string in a rule acts as a wildcard ('match all').
+ *
+ * @param userAccess Array of the user's access rules (objects or legacy arrays).
+ * @param item The context of the resource being accessed.
+ * @param perm The required permission ('get', 'set', 'remove').
+ * @returns boolean - True if permission is granted.
  */
-function checkUserPermission(userAccess, item, perm) {
-    return userAccess.some(acc =>
-        acc[0] === item.app &&
-        acc[1] === item.collectionName &&
-        acc[2] === item.collectionKey &&
-        Array.isArray(acc[3]) &&
-        acc[3].includes(perm)
-    );
+function checkUserPermission(
+    userAccess, // Expected: Array of { app, collectionName, key, methods } objects (or legacy arrays)
+    item,      // Expected: { app, collectionName, collectionKey } object
+    perm       // Expected: string
+) {
+    
+    // Safety check for userAccess being an array
+    if (!Array.isArray(userAccess)) {
+        return false;
+    }
+
+    // Helper to convert the legacy array format into the new object format
+    const normalizeAccessRule = (rawAcc) => {
+        // 1. If it's already an object (new, correct format), return it.
+        if (rawAcc && typeof rawAcc === 'object' && !Array.isArray(rawAcc)) {
+            return rawAcc;
+        }
+        
+        // 2. If it's an array of length 4 (old, legacy format), convert it.
+        // Array indices: [0]=app, [1]=collectionName, [2]=key, [3]=methods
+        if (Array.isArray(rawAcc) && rawAcc.length === 4) {
+            return {
+                app: rawAcc[0],
+                collectionName: rawAcc[1],
+                key: rawAcc[2],
+                methods: rawAcc[3]
+            };
+        }
+        
+        // 3. If it's neither, return a structure that will fail safely.
+        return { methods: [] }; 
+    };
+
+    // We use .some() to stop and return true the moment a matching rule is found.
+    return userAccess.some(rawAcc => {
+        
+        // Normalize the rule first
+        const acc = normalizeAccessRule(rawAcc);
+
+        // This check handles cases where normalization failed (e.g., malformed data)
+        if (!acc.methods) { 
+            return false;
+        }
+
+        // Handle cases where the wildcard might be stored as null or an empty string, or missing property
+        const isWildcard = (value) => value === null || value === '' || value === undefined;
+
+        // 1. Check App Match (Wildcard OR Exact Match)
+        const appMatch = isWildcard(acc.app) || acc.app === item.app;
+
+        // 2. Check Collection Match (Wildcard OR Exact Match)
+        const collectionMatch = isWildcard(acc.collectionName) || acc.collectionName === item.collectionName;
+
+        // 3. Check Key Match (Wildcard OR Exact Match)
+        const keyMatch = isWildcard(acc.key) || acc.key === item.collectionKey;
+
+        // 4. Check Permission Match
+        const permMatch = Array.isArray(acc.methods) && acc.methods.includes(perm);
+
+        // Access is granted ONLY if ALL levels match (or are wildcard) AND the permission is allowed.
+        return appMatch && collectionMatch && keyMatch && permMatch;
+    });
 }
+
 
 /**
  * setItem
  */
 exports.setItem = async (req, res) => {
+    if (!req.user) return res.status(400).json({
+        error: 'token expired'
+    });
     const userAccess = req.user.access;
 
     try {
@@ -171,6 +237,9 @@ exports.setItem = async (req, res) => {
  * getItem
  */
 exports.getItem = async (req, res) => {
+    if (!req.user) return res.status(400).json({
+        error: 'token expired'
+    });
     const userAccess = req.user.access;
 
     try {
@@ -253,6 +322,9 @@ exports.getItem = async (req, res) => {
  * removeItem
  */
 exports.removeItem = async (req, res) => {
+    if (!req.user) return res.status(400).json({
+        error: 'token expired'
+    });
     const userAccess = req.user.access;
 
     try {
