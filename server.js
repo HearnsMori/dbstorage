@@ -28,8 +28,25 @@ app.use(express.json({limit: '1mb'}));
 app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 app.get('/', (req, res) => {
-	res.send("Updated November 18");
+	res.send("Updated November 21");
 });
+
+const path = require('path');
+
+app.get('/utils/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, 'uploads', filename); // Assuming files are in an 'uploads' directory
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error sending file:', err);
+      res.status(500).send('Error downloading file.');
+    } else {
+      console.log('File sent successfully:', filename);
+    }
+  });
+});
+
 app.use('/', require('./routes/storage'));
 app.use('/', apiLimiter)
 
