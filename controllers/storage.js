@@ -297,18 +297,15 @@ exports.getItem = async (req, res) => {
                 structuredData[app] = {};
             }
             if (!structuredData[app][collectionName]) {
-                structuredData[app][collectionName] = [];
+                structuredData[app][collectionName] = {};
             }
-
-            structuredData[app][collectionName].push({
-                collectionKey,
-                key,
-                value
-            });
+            if (!structuredData[app][collectionName]["collectionKey"]) {
+                structuredData[app][collectionName]["collectionKey"] = collectionKey;
+            }
+            structuredData[app][collectionName][key] = value;
         });
-
         res.status(200).json(structuredData);
-
+            
     } catch (err) {
         console.error('Error in getItem:', err);
         res.status(500).json({
