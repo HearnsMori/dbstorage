@@ -1,241 +1,249 @@
 // /utils/dbStorage.ts
 
 export interface LoginResponse {
-    accessToken: string;
-    refreshToken: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 class DBStorage {
-    private baseURL = "https://dbstorage.onrender.com"; // <-- change to your backend
-    private accessToken: string | null = null;
-    private refreshToken: string | null = null;
+  private baseURL = "https://dbstorage.onrender.com"; // <-- change to your backend
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
 
-    private storeTokens(access: string, refresh: string) {
-        this.accessToken = access;
-        this.refreshToken = refresh;
+  private storeTokens(access: string, refresh: string) {
+    this.accessToken = access;
+    this.refreshToken = refresh;
 
-        if (typeof window !== "undefined") {
-            localStorage.setItem("accessToken", access);
-            localStorage.setItem("refreshToken", refresh);
-        }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("accessToken", access);
+      localStorage.setItem("refreshToken", refresh);
+    }
+  }
+
+  private loadTokens() {
+    if (typeof window !== "undefined") {
+      this.accessToken = localStorage.getItem("accessToken");
+      this.refreshToken = localStorage.getItem("refreshToken");
+    }
+  }
+
+  async signin(id: string, password: string): Promise<LoginResponse> {
+    const res = await fetch(`${this.baseURL}/auth/signin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, password }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.message || "Login failed");
+
+    this.storeTokens(data.accessToken, data.refreshToken);
+    return data;
+  }
+
+  private async refreshAuth() {
+    const res = await fetch(`${this.baseURL}/auth/refreshtoken`, {
+      method: "POST",
+      body: JSON.stringify({ token: localStorage.getItem("refreshToken") }),
+      headers: {
+        Authorization: "Bearer " + this.accessToken || "",
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error("Refresh token invalid");
+
+    this.storeTokens(data.accessToken, data.refreshToken);
+  }
+
+  async signup(
+    id: string,
+    password: string,
+    contact: Array<{ name: string; value: string }>,
+    access: any
+  ) {
+    console.log(access);
+    const res = await fetch(`${this.baseURL}/auth/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, password, contact, access }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.message || "Signup failed");
+
+    // If your server returns tokens after signup:
+    if (data.accessToken && data.refreshToken) {
+      this.storeTokens(data.accessToken, data.refreshToken);
     }
 
-    private loadTokens() {
-        if (typeof window !== "undefined") {
-            this.accessToken = localStorage.getItem("accessToken");
-            this.refreshToken = localStorage.getItem("refreshToken");
-        }
+    return data;
+  }
+
+  private async authFetch(path: string, options: RequestInit = {}): Promise<any> {
+    this.loadTokens();
+
+    const res = await fetch(`${this.baseURL}${path}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: "Bearer " + this.accessToken || "",
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.status === 401) {
+      await this.refreshAuth();
+      return this.authFetch(path, options);
+    } else if (!res.ok && (data as any)?.message) {
+      throw new Error((data as any).message || "Request failed");
     }
 
-    async signin(id: string, password: string): Promise<LoginResponse> {
-        const res = await fetch(`${this.baseURL}/auth/signin`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id, password }),
-        });
+    return data;
+  }
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || "Login failed");
+  // --------------------------------------------------
+  // ========== DATA STORAGE (existing) ===============
+  // --------------------------------------------------
 
-        this.storeTokens(data.accessToken, data.refreshToken);
-        return data;
-    }
+  async setItem(
+    app: string | string[],
+    collectionName: string | string[],
+    collectionKey: string | string[],
+    key: string | string[],
+    value: any
+  ) {
+    const data = await this.authFetch("/setItem", {
+      method: "POST",
+      body: JSON.stringify({ app, collectionName, collectionKey, key, value }),
+    });
 
-    private async refreshAuth() {
-        const res = await fetch(`${this.baseURL}/auth/refresh`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                refreshAuth: this.refreshToken || "",
-            },
-        });
+    return data;
+  }
 
-        const data = await res.json();
-        if (!res.ok) throw new Error("Refresh token invalid");
+  async getItem(
+    app: string | string[] | null,
+    collectionName: string | string[] | null,
+    collectionKey: string | string[] | null,
+    key: string | string[] | null,
+    value: any | null
+  ) {
+    const data = await this.authFetch("/getItem", {
+      method: "POST",
+      body: JSON.stringify({ app, collectionName, collectionKey, key, value }),
+    });
 
-        this.storeTokens(data.accessToken, data.refreshToken);
-    }
+    return data;
+  }
 
-    async signup(
-        id: string,
-        password: string,
-        contact: Array<{ name: string; value: string }>,
-        access: Array<[string, string | null, string | null, string[]]>
-    ) {
-        const res = await fetch(`${this.baseURL}/auth/signup`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id, password, contact, access }),
-        });
+  async removeItem(
+    app: string | string[] | null,
+    collectionName: string | string[] | null,
+    collectionKey: string | string[] | null,
+    key: string | string[] | null,
+    value: any | null
+  ) {
+    const data = await this.authFetch("/removeItem", {
+      method: "POST",
+      body: JSON.stringify({ app, collectionName, collectionKey, key, value }),
+    });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || "Signup failed");
+    return data;
+  }
 
-        // If your server returns tokens after signup:
-        if (data.accessToken && data.refreshToken) {
-            this.storeTokens(data.accessToken, data.refreshToken);
-        }
+  // --------------------------------------------------
+  // ============= USER MANAGEMENT ====================
+  // Based on uploaded backend functions
+  // --------------------------------------------------
 
-        return data;
-    }
+  // READ FULL USER
+  async readUser() {
+    const data = await this.authFetch("/user/read", { method: "GET" });
+    return data;
+  }
 
-    private async authFetch(path: string, options: RequestInit = {}): Promise<any> {
-        this.loadTokens();
+  // READ ONLY ID
+  async readId() {
+    const data = await this.authFetch("/user/read-id", { method: "GET" });
+    return data;
+  }
 
-        const res = await fetch(`${this.baseURL}${path}`, {
-            ...options,
-            headers: {
-                ...(options.headers || {}),
-                Authorization: this.accessToken || "",
-                "Content-Type": "application/json",
-            },
-        });
+  // READ CONTACT LIST
+  async readContact() {
+    const data = await this.authFetch("/user/read-contact", { method: "GET" });
+    return data;
+  }
 
-        if (res.status === 401) {
-            await this.refreshAuth();
-            return this.authFetch(path, options);
-        }
+  // READ ACCESS RULES
+  async readAccess() {
+    const data = await this.authFetch("/user/read-access", { method: "GET" });
+    return data;
+  }
 
-        return res;
-    }
+  // UPDATE USER ID
+  async updateId(newId: string) {
+    const data = await this.authFetch("/user/update-id", {
+      method: "PUT",
+      body: JSON.stringify({ newId }),
+    });
+    return data;
+  }
 
-    // --------------------------------------------------
-    // ========== DATA STORAGE (existing) ===============
-    // --------------------------------------------------
+  // UPDATE PASSWORD
+  async updatePassword(newPassword: string) {
+    const data = await this.authFetch("/user/update-password", {
+      method: "PUT",
+      body: JSON.stringify({ newPassword }),
+    });
+    return data;
+  }
 
-    async setItem(
-        app: string,
-        collectionName: string,
-        collectionKey: string,
-        key: string,
-        value: string | number | object
-    ) {
-        const res = await this.authFetch("/data/setItem", {
-            method: "POST",
-            body: JSON.stringify({ app, collectionName, collectionKey, key, value }),
-        });
+  // ADD CONTACT
+  async addContact(name: string, value: string | number) {
+    const data = await this.authFetch("/user/contact-add", {
+      method: "POST",
+      body: JSON.stringify({ name, value }),
+    });
+    return data;
+  }
 
-        return res.json();
-    }
+  // REMOVE CONTACT
+  async removeContact(params: { name?: string; value?: string | number }) {
+    const data = await this.authFetch("/user/contact-remove", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+    return data;
+  }
 
-    async getItem(
-        app: string,
-        collectionName: string,
-        collectionKey: string,
-        key: string
-    ) {
-        const res = await this.authFetch("/data/getItem", {
-            method: "POST",
-            body: JSON.stringify({ app, collectionName, collectionKey, key }),
-        });
+  // ADD ACCESS RULE
+  async addAccess(accessEntry: [string, string | null, string | null, string[]]) {
+    const data = await this.authFetch("/user/access-add", {
+      method: "POST",
+      body: JSON.stringify({ accessEntry }),
+    });
+    return data;
+  }
 
-        return res.json();
-    }
+  // REMOVE ACCESS
+  async removeAccess(accessEntry: [string, string | null, string | null, string[]]) {
+    const data = await this.authFetch("/user/access-remove", {
+      method: "POST",
+      body: JSON.stringify({ accessEntry }),
+    });
+    return data;
+  }
 
-    async removeItem(
-        app: string,
-        collectionName: string,
-        collectionKey: string,
-        key: string
-    ) {
-        const res = await this.authFetch("/data/removeItem", {
-            method: "POST",
-            body: JSON.stringify({ app, collectionName, collectionKey, key }),
-        });
-
-        return res.json();
-    }
-
-    // --------------------------------------------------
-    // ============= USER MANAGEMENT ====================
-    // Based on uploaded backend functions
-    // --------------------------------------------------
-
-    // READ FULL USER
-    async readUser() {
-        const res = await this.authFetch("/user/read", { method: "GET" });
-        return res.json();
-    }
-
-    // READ ONLY ID
-    async readId() {
-        const res = await this.authFetch("/user/read-id", { method: "GET" });
-        return res.json();
-    }
-
-    // READ CONTACT LIST
-    async readContact() {
-        const res = await this.authFetch("/user/read-contact", { method: "GET" });
-        return res.json();
-    }
-
-    // READ ACCESS RULES
-    async readAccess() {
-        const res = await this.authFetch("/user/read-access", { method: "GET" });
-        return res.json();
-    }
-
-    // UPDATE USER ID
-    async updateId(newId: string) {
-        const res = await this.authFetch("/user/update-id", {
-            method: "POST",
-            body: JSON.stringify({ newId }),
-        });
-        return res.json();
-    }
-
-    // UPDATE PASSWORD
-    async updatePassword(newPassword: string) {
-        const res = await this.authFetch("/user/update-password", {
-            method: "POST",
-            body: JSON.stringify({ newPassword }),
-        });
-        return res.json();
-    }
-
-    // ADD CONTACT
-    async addContact(name: string, value: string | number) {
-        const res = await this.authFetch("/user/contact-add", {
-            method: "POST",
-            body: JSON.stringify({ name, value }),
-        });
-        return res.json();
-    }
-
-    // REMOVE CONTACT
-    async removeContact(params: { name?: string; value?: string | number }) {
-        const res = await this.authFetch("/user/contact-remove", {
-            method: "POST",
-            body: JSON.stringify(params),
-        });
-        return res.json();
-    }
-
-    // ADD ACCESS RULE
-    async addAccess(accessEntry: [string, string | null, string | null, string[]]) {
-        const res = await this.authFetch("/user/access-add", {
-            method: "POST",
-            body: JSON.stringify({ accessEntry }),
-        });
-        return res.json();
-    }
-
-    // REMOVE ACCESS
-    async removeAccess(accessEntry: [string, string | null, string | null, string[]]) {
-        const res = await this.authFetch("/user/access-remove", {
-            method: "POST",
-            body: JSON.stringify({ accessEntry }),
-        });
-        return res.json();
-    }
-
-    // DELETE ACCOUNT
-    async deleteAccount() {
-        const res = await this.authFetch("/user/delete-account", {
-            method: "POST",
-        });
-        return res.json();
-    }
+  // DELETE ACCOUNT
+  async deleteAccount() {
+    const data = await this.authFetch("/user/delete-account", {
+      method: "DELETE",
+    });
+    return data;
+  }
 }
 
 const dbStorage = new DBStorage();

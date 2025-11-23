@@ -3,10 +3,10 @@ const bcrypt = require('bcryptjs');
 
 // Define the schema for the storage item.
 const UserSchema = new mongoose.Schema({
-    id: { type: String, required: true },
+    id: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    contact: { type: [{ name: String, value: mongoose.Schema.Types.Mixed }] },
-    access: { type: mongoose.Schema.Types.Mixed } //app, collectionName, key, method
+    contact: { type: [{ name: String, value: mongoose.Schema.Types.Mixed}] },
+    access: { type: mongoose.Schema.Types.Mixed,} //app, collectionName, key, method
 });
 
 UserSchema.pre('save', async function (next) {

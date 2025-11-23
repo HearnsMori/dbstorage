@@ -3,8 +3,6 @@
 // to remove contact, access
 // to delete account
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-
 // =====================
 // READ USER DATA (GENERAL)
 // Requires: JWT authentication middleware
@@ -125,10 +123,6 @@ exports.updatePassword = async (req, res) => {
                 message: "Cannot change password. User must have at least 1 linked ID or contact."
             });
         }
-
-        // Hash new password manually
-        const hashed = await bcrypt.hash(newPassword, 10);
-        user.password = hashed;
         await user.save(); 
 
         return res.status(200).json({ message: "Password updated successfully" });
