@@ -14,7 +14,7 @@ const REFRESH_SECRET = process.env.REFRESH_SECRET || "REFRESH_SECRET_KEY";
 // =====================
 function generateTokens(user) {
     const accessToken = jwt.sign(
-        { userId: user._id, id: user.id, access: user.access },
+        { userId: user._id, id: user.id },
         JWT_SECRET,
         { expiresIn: "15m" }  // short lifespan (recommended)
     );

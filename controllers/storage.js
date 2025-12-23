@@ -20,11 +20,9 @@ function normalizeInput(input) {
  */
 function buildMongooseQuery(body) {
     const query = {};
-    const fields = ['app', 'collectionName', 'collectionKey', 'key', 'value'];
-
+    const fields = ['app', 'collectionName', 'collectionKey', 'key', 'value', 'getAccess', 'setAccess', 'removeAccess'];
     for (const field of fields) {
         const input = body[field];
-
         if (input !== undefined && input !== null) {
             if (Array.isArray(input)) {
                 if (input.length > 0) {
@@ -43,13 +41,11 @@ function buildMongooseQuery(body) {
  */
 function generateZippedFilters(body) {
     const { app, collectionName, collectionKey, key, value } = body;
-
     const apps = normalizeInput(app);
     const collectionNames = normalizeInput(collectionName);
     const collectionKeys = normalizeInput(collectionKey);
     const keys = normalizeInput(key);
     const values = normalizeInput(value);
-
     const inputs = [
         { name: 'app', data: apps, original: app },
         { name: 'collectionName', data: collectionNames, original: collectionName },
@@ -60,7 +56,6 @@ function generateZippedFilters(body) {
 
     const lengths = inputs.filter(item => item.data.length > 1).map(item => item.data.length);
     const maxLength = lengths.length > 0 ? Math.max(...lengths) : 1;
-
     const inconsistent = inputs.some(item => item.data.length > 1 && item.data.length !== maxLength);
     if (inconsistent) {
         throw new Error(`Inconsistent array lengths. All array fields must be length 1 or length ${maxLength}.`);

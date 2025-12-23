@@ -13,7 +13,7 @@ const StorageSchema = new mongoose.Schema({
 
     // Can be ['all', 'self', 'id'] 
     getAccess: { type: [String], required: true, default: ['all'] },
-    setAccess { type: [String], required: true, default: ['self'] },
+    setAccess: { type: [String], required: true, default: ['self'] },
     removeAccess: { type: [String], required: true, default: ['self'] },
     
 }, {
