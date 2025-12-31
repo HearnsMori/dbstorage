@@ -34,7 +34,7 @@ function generateTokens(user) {
 // =====================
 exports.signup = async (req, res) => {
     try {
-        const { id, password, contact, access } = req.body;
+        const { id, password, role, contact } = req.body;
 
         // Check if already exists
         const exists = await User.findOne({ id });
@@ -42,7 +42,7 @@ exports.signup = async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
         }
 
-        const user = new User({ id, password, contact, access });
+        const user = new User({ id, password, role, contact });
         await user.save();
 
         return res.status(201).json({
@@ -112,5 +112,35 @@ exports.refreshToken = async (req, res) => {
     } catch (error) {
         console.error("Refresh token error:", error);
         return res.status(401).json({ message: "Invalid refresh token" });
+    }
+};
+
+//////////////////////// Not yet implemented!
+// =====================
+// FORGOT ACCOUNT
+// =====================
+exports.forgotAccount = async (req, res) => {
+    try {
+        const { id, password } = req.body;
+
+        const user = await User.findOne({ id });
+        if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return res.status(400).json({ message: "Invalid credentials" });
+
+        // Generate both tokens
+        const { accessToken, refreshToken } = generateTokens(user);
+
+        return res.status(200).json({
+            message: "Signin successful",
+            accessToken,
+            refreshToken,
+            user: { id: user.id }
+        });
+
+    } catch (error) {
+        console.error("Signin error:", error);
+        return res.status(500).json({ message: "Signin failed", error });
     }
 };

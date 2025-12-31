@@ -28,7 +28,7 @@ app.use(express.json({limit: '1mb'}));
 app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 app.get('/', (req, res) => {
-    res.send("Updated December 28");
+    res.send("Updated December 31, 2025");
 });
 
 const path = require('path');

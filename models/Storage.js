@@ -1,33 +1,24 @@
 const mongoose = require('mongoose');
 
-// Define the schema for the storage item.
-const StorageSchema = new mongoose.Schema({
-    // Primary fields, often used together as a unique key
+const StorageSchema = new mongoose.Schema(
+  {
     app: { type: String, required: true, index: true },
     collectionName: { type: String, required: true, index: true },
     collectionKey: { type: String, required: true, index: true },
     key: { type: String, required: true, index: true },
 
-    // The value stored, allowing any type
     value: { type: mongoose.Schema.Types.Mixed, required: true },
 
-    // Can be ['all', 'self', 'id'] 
-    getAccess: { type: [String], required: true, default: ['all'] },
-    setAccess: { type: [String], required: true, default: ['self'] },
-    removeAccess: { type: [String], required: true, default: ['self'] },
-    
-}, {
-    timestamps: true,
-    // Ensure the combination of app, collectionName, collectionKey and key is unique
-    // This is crucial for update it setItem
-    indexes: [{ unique: true, fields: ['app', 'collectionName', 'collectionKey', 'key'] }]
-});
-/*
-StorageSchema.pre('save', async (next) => {
-    //Encrypt data here
-    //this.isModified('schema');
-});*/
+    getAccess: { type: [String], default: ['#all'] },
+    setAccess: { type: [String], default: [] },
+    removeAccess: { type: [String], default: [] },
+  },
+  { timestamps: true }
+);
 
+StorageSchema.index(
+  { app: 1, collectionName: 1, collectionKey: 1, key: 1 },
+  { unique: true }
+);
 
-// Export the Mongoose model
 module.exports = mongoose.model('Storage', StorageSchema);

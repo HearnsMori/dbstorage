@@ -1,308 +1,237 @@
-//to set, remove, or get
+const Storage = require('../models/Storage');
 
-const Storage = require('../models/Storage'); // Corrected import path
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const exactSetKeyFilter = ({ app, collectionName, collectionKey, key }) => {
+    return ({
+        app,
+        collectionName,
+        collectionKey,
+        key
+    });
+};
+
+const exactGetKeyFilter = ({ app, collectionName, collectionKey, key, value }) => {
+  return {
+    ...(app != null ? { app } : {}),
+    ...(collectionName != null ? { collectionName } : {}),
+    ...(collectionKey != null ? { collectionKey } : {}),
+    ...(key != null ? { key } : {}),
+    ...(value != null ? { value } : {}),
+  };
+};
+
 
 /**
- * Utility: Converts a single value (string) or an array of values (string[])
- * into an array of values. Handles undefined/null input by returning an empty array.
- * @param {string | string[] | any} input - The input value.
- * @returns {Array} An array containing all unique values.
+ * ACL CHECK
+ * '#all' → always allowed
+ * otherwise → userId must be present
  */
-function normalizeInput(input) {
-    if (input === undefined || input === null) {
-        return [];
-    }
-    return Array.isArray(input) ? input : [input];
+const hasAccess = (doc, userId, type) => {
+    if (!doc) return false;
+
+    const list =
+        type === 'get'
+            ? doc.getAccess
+            : type === 'set'
+                ? doc.setAccess
+                : doc.removeAccess;
+
+    if (!Array.isArray(list)) return false;
+    if (list.includes('#all')) return true;
+    return list.includes(userId);
+};
+
+/* =========================================================
+   ZIP ARRAY → OBJECT COMBINATIONS
+========================================================= */
+
+function toArray(v) {
+    if (v === undefined) return undefined;
+    return Array.isArray(v) ? v : [v];
 }
 
-/**
- * Utility: Constructs a Mongoose query object from the body.
- */
-function buildMongooseQuery(body) {
-    const query = {};
-    const fields = ['app', 'collectionName', 'collectionKey', 'key', 'value', 'getAccess', 'setAccess', 'removeAccess'];
-    for (const field of fields) {
-        const input = body[field];
-        if (input !== undefined && input !== null) {
-            if (Array.isArray(input)) {
-                if (input.length > 0) {
-                    query[field] = { $in: input };
-                }
-            } else {
-                query[field] = input;
+function normalizeACL(v) {
+    if (v === undefined) return undefined;
+    return Array.isArray(v) ? v : [v];
+}
+
+function generateZipped(body) {
+    const fields = [
+        'app',
+        'collectionName',
+        'collectionKey',
+        'key',
+        'value',
+        'getAccess',
+        'setAccess',
+        'removeAccess',
+    ];
+
+    const arrays = {};
+    let max = 1;
+
+    // Normalize to arrays & find max length
+    for (const f of fields) {
+        arrays[f] = toArray(body[f]);
+        if (arrays[f]?.length > max) max = arrays[f].length;
+    }
+
+    const items = [];
+
+    for (let i = 0; i < max; i++) {
+        const item = {};
+
+        for (const f of fields) {
+            if (!arrays[f]) continue;
+
+            const src = arrays[f];
+            let val = src[i] ?? src[0];
+
+            // ACL fields must ALWAYS be arrays
+            if (['getAccess', 'setAccess', 'removeAccess'].includes(f)) {
+                val = normalizeACL(val);
             }
+
+            item[f] = val;
         }
+
+        items.push(item);
     }
-    return query;
+    console.log('Generated zipped items:', items);
+    return items;
 }
 
-/**
- * Utility: Generates zipped filters.
- */
-function generateZippedFilters(body) {
-    const { app, collectionName, collectionKey, key, value } = body;
-    const apps = normalizeInput(app);
-    const collectionNames = normalizeInput(collectionName);
-    const collectionKeys = normalizeInput(collectionKey);
-    const keys = normalizeInput(key);
-    const values = normalizeInput(value);
-    const inputs = [
-        { name: 'app', data: apps, original: app },
-        { name: 'collectionName', data: collectionNames, original: collectionName },
-        { name: 'collectionKey', data: collectionKeys, original: collectionKey },
-        { name: 'key', data: keys, original: key },
-        { name: 'value', data: values, original: value }
-    ].filter(item => item.original !== undefined);
 
-    const lengths = inputs.filter(item => item.data.length > 1).map(item => item.data.length);
-    const maxLength = lengths.length > 0 ? Math.max(...lengths) : 1;
-    const inconsistent = inputs.some(item => item.data.length > 1 && item.data.length !== maxLength);
-    if (inconsistent) {
-        throw new Error(`Inconsistent array lengths. All array fields must be length 1 or length ${maxLength}.`);
-    }
+/* =========================================================
+   SET ITEM (UPSERT + ACL + DEFAULTS)
+========================================================= */
 
-    let filters = [];
-
-    for (let i = 0; i < maxLength; i++) {
-        const filter = {};
-
-        for (const item of inputs) {
-            const dataArr = item.data;
-            let val;
-
-            if (item.original === null) {
-                continue;
-            } else if (dataArr.length === 1) {
-                val = dataArr[0];
-            } else {
-                val = dataArr[i];
-            }
-
-            filter[item.name] = val;
-        }
-        filters.push(filter);
-    }
-
-    return filters;
-}
-
-/**
- * setItem
- */
 exports.setItem = async (req, res) => {
-    if (!req.user) return res.status(400).json({
-        error: 'token expired'
-    });
+    if (!req.user?.id)
+        return res.status(401).json({ error: 'token expired' });
 
     try {
-        const combinations = generateZippedFilters(req.body);
-
-        if (combinations.length === 0) {
-            return res.status(400).json({
-                message: 'All fields (app, collectionName, collectionKey, key, value) must contain values.'
-            });
-        }
+        const items = generateZipped(req.body);
+        if (!items.length)
+            return res.status(400).json({ error: 'No valid items' });
 
         const denied = [];
+        const ops = [];
 
-        for (const item of combinations) {
-            const allowed = checkUserPermission(userAccess, item, "set");
+        for (const item of items) {
+            const filter = exactSetKeyFilter(item);
+            const existing = await Storage.findOne(filter);
 
-            if (!allowed) {
-                denied.push({
-                    app: item.app,
-                    collection: item.collectionName,
-                    key: item.collectionKey
-                });
+            // ACL check for existing item
+            if (existing && !hasAccess(existing, req.user.id, 'set')) {
+                denied.push(filter);
+                continue;
             }
-        }
 
-        if (denied.length > 0) {
-            return res.status(403).json({
-                message: "You do not have 'set' permission for some items.",
-                denied
-            });
-        }
+            const userId = req.user.id;
 
-        const bulkOps = combinations.map(filter => ({
-            updateOne: {
-                filter: {
-                    app: filter.app,
-                    collectionName: filter.collectionName,
-                    collectionKey: filter.collectionKey,
-                    key: filter.key
+            ops.push({
+                updateOne: {
+                    filter,
+                    update: {
+                        $set: {
+                            ...item,
+
+                            // DEFAULT ACL BEHAVIOR
+                            getAccess: item.getAccess ?? ['#all'],
+                            setAccess: item.setAccess ?? [userId],
+                            removeAccess: item.removeAccess ?? [userId],
+                        },
+                    },
+                    upsert: true,
                 },
-                update: { $set: filter },
-                upsert: true
-            }
-        }));
+            });
+        }
 
-        const result = await Storage.bulkWrite(bulkOps);
+        if (denied.length) {
+            return res.status(403).json({
+                message: 'Set access denied',
+                denied,
+            });
+        }
 
-        res.status(200).json({
-            message: 'Items saved/updated successfully',
-            affected: result.upsertedCount + result.modifiedCount
+        const result = await Storage.bulkWrite(ops);
+
+        res.json({
+            message: 'Items saved',
+            affected: result.upsertedCount + result.modifiedCount,
         });
-
     } catch (err) {
-        console.error('Error in setItem:', err);
-        res.status(500).json({
-            error: 'Failed to save items',
-            details: err.message
-        });
+        console.error('setItem error:', err);
+        res.status(500).json({ error: err.message });
     }
 };
 
-/**
- * getItem
- */
+/* =========================================================
+   GET ITEM (ACL STRICT, #all AWARE)
+========================================================= */
+
 exports.getItem = async (req, res) => {
-    if (!req.user) return res.status(400).json({
-        error: 'token expired'
-    });
+    if (!req.user?.id)
+        return res.status(401).json({ error: 'token expired' });
 
     try {
-        const body = req.body;
-        const arrayFields = ['app', 'collectionName', 'collectionKey', 'key', 'value']
-            .filter(f => Array.isArray(body[f]) && body[f].length > 1);
+        const filters = generateZipped(req.body).map(exactGetKeyFilter);
+        console.log(filters);
+        const docs = await Storage.find(
+            filters.length > 1 ? { $or: filters } : filters[0]
+        );
 
-        let filters;
+        const accepted = docs.filter(
+            (doc) => hasAccess(doc, req.user.id, 'get')
+        );
 
-        if (arrayFields.length > 1) {
-            filters = generateZippedFilters(body);
-        } else {
-            const q = buildMongooseQuery(body);
-            filters = [q];
-        }
+        const output = {};
 
-        const denied = [];
-
-        for (const item of filters) {
-            const permOk = checkUserPermission(userAccess, item, "get");
-
-            if (!permOk) {
-                denied.push({
-                    app: item.app,
-                    collection: item.collectionName,
-                    key: item.collectionKey
-                });
-            }
-        }
-
-        if (denied.length > 0) {
-            return res.status(403).json({
-                message: "You do not have 'get' permission for some items.",
-                denied
-            });
-        }
-
-        let query;
-
-        if (arrayFields.length > 1) {
-            query = { $or: filters };
-        } else {
-            query = filters[0];
-        }
-
-        const results = await Storage.find(query).select('app collectionName collectionKey key value -_id');
-
-        const structuredData = {};
-
-        results.forEach(doc => {
-            const { app, collectionName, collectionKey, key, value } =
-                doc.toObject ? doc.toObject() : doc;
-
-            if (!structuredData[app]) {
-                structuredData[app] = {};
-            }
-            if (!structuredData[app][collectionName]) {
-                structuredData[app][collectionName] = {};
-            }
-            if (!structuredData[app][collectionName]["collectionKey"]) {
-                structuredData[app][collectionName]["collectionKey"] = collectionKey;
-            }
-            structuredData[app][collectionName][key] = value;
+        accepted.forEach(({ app, collectionName, collectionKey, key, value }) => {
+            output[app] ??= {};
+            output[app][collectionName] ??= { collectionKey };
+            output[app][collectionName][key] = value;
         });
-        res.status(200).json(structuredData);
-            
+
+        res.json(output);
     } catch (err) {
-        console.error('Error in getItem:', err);
-        res.status(500).json({
-            error: 'Failed to retrieve items',
-            details: err.message
-        });
+        console.error('getItem error:', err);
+        res.status(500).json({ error: err.message });
     }
 };
 
-/**
- * removeItem
- */
+/* =========================================================
+   REMOVE ITEM (ACL STRICT, #all AWARE)
+========================================================= */
+
 exports.removeItem = async (req, res) => {
-    if (!req.user) return res.status(400).json({
-        error: 'token expired'
-    });
-    const userAccess = req.user.access;
+    if (!req.user?.id)
+        return res.status(401).json({ error: 'token expired' });
 
     try {
-        const body = req.body;
-        const arrayFields = ['app', 'collectionName', 'collectionKey', 'key', 'value']
-            .filter(f => Array.isArray(body[f]) && body[f].length > 1);
+        const filters = generateZipped(req.body).map(exactGetKeyFilter);
 
-        let filters;
+        const docs = await Storage.find(
+            filters.length > 1 ? { $or: filters } : filters[0]
+        );
 
-        if (arrayFields.length > 1) {
-            filters = generateZippedFilters(body);
-
-            if (filters.length === 0) {
-                return res.status(400).json({
-                    message: 'No valid combinations for removal.'
-                });
+        docs.forEach(doc => {
+            if (hasAccess(doc, req.user.id, 'remove')) {
+                Storage.deleteOne({ _id: doc._id }).exec();
+            } else {
+                console.log('Not authorized to remove:', doc);
             }
-        } else {
-            filters = [buildMongooseQuery(body)];
-        }
-
-        const denied = [];
-
-        for (const item of filters) {
-            const permOk = checkUserPermission(userAccess, item, "remove");
-
-            if (!permOk) {
-                denied.push({
-                    app: item.app,
-                    collection: item.collectionName,
-                    key: item.collectionKey
-                });
-            }
-        }
-
-        if (denied.length > 0) {
-            return res.status(403).json({
-                message: "You do not have 'remove' permission for some items.",
-                denied
-            });
-        }
-
-        let query;
-
-        if (arrayFields.length > 1) {
-            query = { $or: filters };
-        } else {
-            query = filters[0];
-        }
-
-        const result = await Storage.deleteMany(query);
-
-        res.status(200).json({
-            message: 'Items removed successfully',
-            deletedCount: result.deletedCount
         });
 
+        res.json({
+            message: 'Items removed'
+        });
     } catch (err) {
-        console.error('Error in removeItem:', err);
-        res.status(500).json({
-            error: 'Failed to remove items',
-            details: err.message
-        });
+        console.error('removeItem error:', err);
+        res.status(500).json({ error: err.message });
     }
 };
