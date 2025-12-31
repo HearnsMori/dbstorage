@@ -4,11 +4,11 @@ const User = require('../models/User');
 const Storage = require('../models/Storage');
 const controllers = require('../controllers/storage');
 const verifyToken = require('../middlewares/verifyToken');
-const verifyAccess = require('../middlewares/verifyAccess');
+
 //Routes
-router.post('/setItem', verifyToken, verifyAccess, controllers.setItem);
-router.post('/removeItem', verifyToken, verifyAccess, controllers.removeItem);
-router.post('/getItem', verifyToken, verifyAccess, controllers.getItem);
+router.post('/getItem', verifyToken, controllers.getItem);
+router.post('/setItem', verifyToken, controllers.setItem);
+router.post('/removeItem', verifyToken, controllers.removeItem);
 
 // Clear all items (if you have a clear function)
 router.post('/clearAll', async (req, res) => {

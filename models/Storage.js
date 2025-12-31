@@ -22,11 +22,11 @@ const StorageSchema = new mongoose.Schema({
     // This is crucial for update it setItem
     indexes: [{ unique: true, fields: ['app', 'collectionName', 'collectionKey', 'key'] }]
 });
-
+/*
 StorageSchema.pre('save', async (next) => {
     //Encrypt data here
     //this.isModified('schema');
-});
+});*/
 
 
 // Export the Mongoose model

@@ -4,62 +4,53 @@ const router = express.Router();
 const user = require('../controllers/user');
 const verifyToken = require('../middlewares/verifyToken');
 
-// All routes below require a valid JWT (verified by verifyToken middleware)
+//id=String,
+//password=String, 
+//role=[String],
+//contact=[{name: String, value: any}],
 
-// ----------------------------------------------------
-// READ OPERATIONS (GET)
-// ----------------------------------------------------
+/*
+ *Self
+ */
+//Read
+router.get('getSelfAll', verifyToken, user.getSelfAll);
+router.get('getSelfId', verifyToken, user.getSelfId);
+router.get('getSelfPassword', verifyToken, user.getSelfPassword);
+router.get('getSelfRole', verifyToken, user.getSelfRole);
+router.get('getSelfContact', verifyToken, user.getSelfContact);
+//Update
+router.put('setSelfAll',verifyToken, user.setSelfAll);
+router.put('setSelfId',verifyToken, user.setSelfId);
+router.put('setSelfPassword',verifyToken, user.setSelfPassword);
+router.put('pushSelfRole',verifyToken, user.pushSelfRole);
+router.put('pushSelfContact',verifyToken, user.pushSelfContact);
+//Delete
+router.delete('removeSelfAll', verifyToken, user.removeSelfAll);
+router.delete('removeSelfId', verifyToken, user.removeSelfId);
+router.delete('removeSelfPassword', verifyToken, user.removeSelfPassword);
+router.delete('popSelfRole', verifyToken, user.popSelfRole);
+router.delete('popSelfContact', verifyToken, user.popSelfContact);
 
-// Get non-sensitive general user data
-router.get('/read', verifyToken, user.readUser);
-
-// Get specific user ID
-router.get('/read-id', verifyToken, user.readId);
-
-// Get all contacts
-router.get('/read-contact', verifyToken, user.readContact);
-
-// Get all access rules
-router.get('/read-access', verifyToken, user.readAccess);
-
-
-// ----------------------------------------------------
-// UPDATE/MODIFY OPERATIONS (PUT)
-// ----------------------------------------------------
-
-// Update login ID
-router.put('/update-id', verifyToken, user.updateId);
-
-// Update password
-router.put('/update-password', verifyToken, user.updatePassword);
-
-
-// ----------------------------------------------------
-// ARRAY OPERATIONS (POST - used for specific array mutations)
-// ----------------------------------------------------
-
-// CONTACTS
-// Add a new contact entry to the array
-router.post('/contact-add', verifyToken, user.addContact);
-
-// Remove one or more contacts based on criteria (name or value)
-router.post('/contact-remove', verifyToken, user.removeContact);
-
-
-// ACCESS RULES
-// Add a new access rule to the array
-router.post('/access-add', verifyToken, user.addAccess);
-
-// Remove a specific access rule entry
-router.post('/access-remove', verifyToken, user.removeAccess);
-
-
-// ----------------------------------------------------
-// DELETE OPERATION
-// ----------------------------------------------------
-
-// Delete the user's account
-router.delete('/delete-account', verifyToken, user.deleteAccount);
-
+/*
+ *Other
+ */
+//Read
+router.get('getOtherAll', verifyToken, user.getOtherAll);
+router.get('getOtherId', verifyToken, user.getOtherId);
+router.get('getOtherPassword', verifyToken, user.getOtherPassword);
+router.get('getOtherRole', verifyToken, user.getOtherRole);
+router.get('getOtherContact', verifyToken, user.getOtherContact);
+//Update
+router.put('setOtherAll',verifyToken, user.setOtherAll);
+router.put('setOtherId',verifyToken, user.setOtherId);
+router.put('setOtherPassword',verifyToken, user.setOtherPassword);
+router.put('pushOtherRole',verifyToken, user.pushOtherRole);
+router.put('pushOtherContact',verifyToken, user.pushOtherContact);
+//Delete
+router.delete('removeOtherAll', verifyToken, user.removeOtherAll);
+router.delete('removeOtherId', verifyToken, user.removeOtherId);
+router.delete('removeOtherPassword', verifyToken, user.removeOtherPassword);
+router.delete('popOtherRole', verifyToken, user.popOtherRole);
+router.delete('popOtherContact', verifyToken, user.popOtherContact);
 
 module.exports = router;
