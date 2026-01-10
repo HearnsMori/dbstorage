@@ -32,19 +32,14 @@ app.use(express.json({limit: '1mb'}));
 app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 app.get('/', (req, res) => {
-    res.send("Updated January 10, 2026 8:03 PM");
+    res.send("Updated January 10, 2026 11:51 PM");
 });
 
-app.use('/', require('./routes/storage'));
-app.use('/', apiLimiter)
-app.use('/process', require('./routes/process'));
-app.use('/process', apiLimiter)
-app.use('/auth', require('./routes/auth'));
-app.use('/auth', apiLimiter);
-app.use('/user', require('./routes/user'));
-app.use('/user', apiLimiter);
-app.use('/role', require('./routes/role'));
-app.use('/role', apiLimiter);
+app.use('/', apiLimiter, require('./routes/storage'));
+app.use('/process', apiLimiter, require('./routes/process'));
+app.use('/auth', apiLimiter, require('./routes/auth'));
+app.use('/user', apiLimiter, require('./routes/user'));
+app.use('/role', apiLimiter, require('./routes/role'));
 
 //utils download file
 app.get('/utils/:filename', (req, res) => {
@@ -54,7 +49,7 @@ app.get('/utils/:filename', (req, res) => {
     res.sendFile(filePath, (err) => {
         if (err) {
             console.error('Error sending file:', err);
-            res.status(500).send('Error downloading file.');
+            res.status(500).send('Availble File: \n- dbstorage.ts');
         } else {
             console.log('File sent successfully:', filename);
         }

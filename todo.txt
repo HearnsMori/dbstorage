@@ -1,12 +1,13 @@
 To Do:
 
 dbstorage/routes:
-/opinion
+process.js
 
 dbstorage/controllers:
-/storage.js
-/user.js
-/process.js
+/opinion
+/datastructure
+/process
+user.js
 
 dbstorage/uploads:
-/typescript.ts
+dbstorage.ts
