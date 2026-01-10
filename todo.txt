@@ -1,3 +1,5 @@
 MRCI (Models, Routes, Controllers, Implementation Integration with Other Model)
-User - C
+User - 
 Role - MRCI
+Storage - MRCI
+Process - MRCI

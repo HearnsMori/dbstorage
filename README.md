@@ -3,9 +3,9 @@
 
 ## Overview
 
-dbStorage is a Node.js backend system designed to provide a simple, database-backed key-value storage solution, mirroring the simplicity of the browser's `localStorage` API but with the power of a persistent database. It is built for rapid frontend prototyping and testing, allowing developers to focus on the frontend logic by providing a flexible and abstracted storage backend.
+dbStorage is a Node.js backend system designed to provide a database-backed storage solution, mirroring the simplicity of the browser's `localStorage` API but with the power of a persistent database. It is built for rapid frontend prototyping and testing, allowing developers to focus on the frontend logic by providing a flexible and abstracted storage backend.
 
-The system features robust authentication, permission-based access, and advanced query capabilities, including multi-value handling and wildcard queries. Operations like `setItem`, `getItem`, and `removeItem` can handle single values or arrays for powerful batch operations.
+The system features robust authentication, role-based access, and advanced query capabilities, including multi-value handling and wildcard queries. Operations like `setItem`, `getItem`, and `removeItem` can handle single values or arrays for powerful batch operations.
 
 ## Features
 

@@ -5,7 +5,7 @@ const controllers = require('../controllers/auth');
 //Routes
 router.post('/signup', controllers.signup);
 router.post('/signin', controllers.signin);
-router.post('/refreshtoken', controllers.refreshToken);
-router.post('/forgotaccount', controllers.forgotAccount);
+router.post('/refresh-token', controllers.refreshToken);
+router.post('/recover', controllers.recover);
 
 module.exports = router;
