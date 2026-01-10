@@ -50,6 +50,8 @@ app.get('/utils/:filename', (req, res) => {
 app.use('/', require('./routes/storage'));
 app.use('/', apiLimiter)
 
+app.use('/process', require('./routes/process'));
+app.use('/process', apiLimiter)
 app.use('/auth', require('./routes/auth'));
 app.use('/auth', apiLimiter);
 app.use('/user', require('./routes/user'));
