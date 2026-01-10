@@ -6,6 +6,6 @@ const controllers = require('../controllers/auth');
 router.post('/signup', controllers.signup);
 router.post('/signin', controllers.signin);
 router.post('/refreshToken', controllers.refreshToken);
-router.post('/forgotAccount', controllers.forgotAccount);
+router.post('/recover', controllers.recover);
 
 module.exports = router;

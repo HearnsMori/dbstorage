@@ -1,376 +1,246 @@
 const User = require('../models/User');
+const Role = require('../models/User');
 
-exports.readUser = async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        // Use .select('-password') to exclude the sensitive password hash
-        const user = await User.findById(userId).select('-password'); 
-        
-        if (!user) return res.status(404).json({ message: "User not found" });
+/* ======================
+   SHARED PASSWORD GUARD
+====================== */
 
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "Failed to read user data", error });
+const OTHER_PASSWORD = process.env.CLEAR_ALL_KEY;
+
+const requireOtherPassword = (req, res) => {
+    if (req.body?.password !== OTHER_PASSWORD) {
+        res.status(401).json({ error: 'Invalid password' });
+        return false;
     }
+    return true;
 };
+
+/* ======================
+   SELF — READ
+====================== */
 
 exports.getSelfAll = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    const user = await User.findOne({ id: req.userId }).select('-password');
+    res.json(user);
 };
 
-exports.getSelfId = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+exports.getSelfId = (req, res) => {
+    res.json({ id: req.userId });
 };
 
 exports.getSelfPassword = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    const user = await User.findOne({ id: req.userId }).select('password');
+    res.json(user.password);
 };
 
 exports.getSelfRole = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    const user = await User.findOne({ id: req.userId }).select('role');
+    res.json(user.role);
 };
 
 exports.getSelfContact = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    const user = await User.findOne({ id: req.userId }).select('contact');
+    res.json(user.contact);
 };
 
+/* ======================
+   SELF — UPDATE
+====================== */
+
 exports.setSelfAll = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    const user = await User.findOne({ id: req.userId });
+    Object.assign(user, req.body);
+    await user.save();
+    res.json({ success: true });
 };
 
 exports.setSelfId = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    await User.updateOne({ id: req.userId }, { id: req.body.id });
+    res.json({ success: true });
 };
 
 exports.setSelfPassword = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    const user = await User.findOne({ id: req.userId });
+    user.password = req.body.password;
+    await user.save();
+    res.json({ success: true });
 };
 
 exports.pushSelfRole = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+
+    await User.updateOne(
+        { id: req.userId },
+        { $addToSet: { role: req.body.role } }
+    );
+    res.json({ success: true });
 };
 
 exports.pushSelfContact = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    await User.updateOne(
+        { id: req.userId },
+        { $push: { contact: req.body } }
+    );
+    res.json({ success: true });
 };
+
+/* ======================
+   SELF — DELETE
+====================== */
 
 exports.removeSelfAll = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    await User.deleteOne({ id: req.userId });
+    res.json({ success: true });
 };
 
-exports.removeSelfId = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+exports.removeSelfId = (_, res) => {
+    res.status(400).json({ error: 'Cannot remove id only' });
 };
 
 exports.removeSelfPassword = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    await User.updateOne(
+        { id: req.userId },
+        { $unset: { password: "" } }
+    );
+    res.json({ success: true });
 };
 
 exports.popSelfRole = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    await User.updateOne(
+        { id: req.userId },
+        { $pull: { role: req.body.role } }
+    );
+    res.json({ success: true });
 };
 
 exports.popSelfContact = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    await User.updateOne(
+        { id: req.userId },
+        { $pull: { contact: { name: req.body.name } } }
+    );
+    res.json({ success: true });
 };
+
+/* ======================
+   OTHER — READ
+====================== */
 
 exports.getOtherAll = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    const user = await User.findOne({ id: req.body.id }).select('-password');
+    res.json(user);
 };
 
-exports.getOtherId = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+exports.getOtherId = (req, res) => {
+    res.json({ id: req.body.id });
 };
 
 exports.getOtherPassword = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    const user = await User.findOne({ id: req.body.id }).select('password');
+    res.json(user.password);
 };
 
 exports.getOtherRole = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    const user = await User.findOne({ id: req.body.id }).select('role');
+    res.json(user.role);
 };
 
 exports.getOtherContact = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    const user = await User.findOne({ id: req.body.id }).select('contact');
+    res.json(user.contact);
 };
 
+/* ======================
+   OTHER — UPDATE
+====================== */
+
 exports.setOtherAll = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    const user = await User.findOne({ id: req.body.id });
+    Object.assign(user, req.body);
+    await user.save();
+    res.json({ success: true });
 };
 
 exports.setOtherId = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    await User.updateOne(
+        { id: req.body.id },
+        { id: req.body.newId }
+    );
+    res.json({ success: true });
 };
 
 exports.setOtherPassword = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    const user = await User.findOne({ id: req.body.id });
+    user.password = req.body.newPassword;
+    await user.save();
+    res.json({ success: true });
 };
 
 exports.pushOtherRole = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    await User.updateOne(
+        { id: req.body.id },
+        { $addToSet: { role: req.body.role } }
+    );
+    res.json({ success: true });
 };
 
 exports.pushOtherContact = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    await User.updateOne(
+        { id: req.body.id },
+        { $push: { contact: req.body.contact } }
+    );
+    res.json({ success: true });
 };
+
+/* ======================
+   OTHER — DELETE
+====================== */
 
 exports.removeOtherAll = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    await User.deleteOne({ id: req.body.id });
+    res.json({ success: true });
 };
 
-exports.removeOtherId = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+exports.removeOtherId = (_, res) => {
+    res.status(400).json({ error: 'Cannot remove id only' });
 };
 
 exports.removeOtherPassword = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    await User.updateOne(
+        { id: req.body.id },
+        { $unset: { password: "" } }
+    );
+    res.json({ success: true });
 };
 
 exports.popOtherRole = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    await User.updateOne(
+        { id: req.body.id },
+        { $pull: { role: req.body.role } }
+    );
+    res.json({ success: true });
 };
 
 exports.popOtherContact = async (req, res) => {
-    try {
-        const selfId = req.user.userId;
-        const user = await User.findById(selfId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-        return res.status(200).json({ user });
-    } catch (error) {
-        console.error("Read user error:", error);
-        return res.status(500).json({ message: "User route failed: ", error });
-    }
+    if (!requireOtherPassword(req, res)) return;
+
+    await User.updateOne(
+        { id: req.body.id },
+        { $pull: { contact: { name: req.body.name } } }
+    );
+    res.json({ success: true });
 };

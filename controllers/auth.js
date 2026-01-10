@@ -2,6 +2,7 @@
 // to do in future: to login through forgetpassword
 
 const User = require('../models/User');
+const Role = require('../models/Role');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || "ACCESS_SECRET_KEY";
@@ -119,7 +120,7 @@ exports.refreshToken = async (req, res) => {
 // =====================
 // FORGOT ACCOUNT
 // =====================
-exports.forgotAccount = async (req, res) => {
+exports.recover = async (req, res) => {
     try {
         const { id, password } = req.body;
 
@@ -144,3 +145,90 @@ exports.forgotAccount = async (req, res) => {
         return res.status(500).json({ message: "Signin failed", error });
     }
 };
+
+// =====================
+// SIGNUP ROLE
+// =====================
+exports.roleSignup = async (req, res) => {
+    try {
+        const { id, password } = req.body;
+
+        // Check if already exists
+        const exists = await Role.findOne({ id });
+        if (exists) {
+            return res.status(400).json({ message: "Role already exists" });
+        }
+
+        const role = new Role({ id, password });
+        await role.save();
+
+        return res.status(201).json({
+            message: "Role signup successful",
+            user: { id: user.id }
+        });
+    } catch (error) {
+        console.error("Role signup error:", error);
+        return res.status(500).json({ message: `Signup failed: ${error}`, error });
+    }
+};
+
+
+// =====================
+// SIGNIN ROLE
+// =====================
+exports.roleSignin = async (req, res) => {
+    try {
+        const { id, password } = req.body;
+
+        const role = await Role.findOne({ id });
+        if (!role) return res.status(400).json({ message: "Invalid credentials" });
+
+        const match = await bcrypt.compare(password, role.password);
+        if (!match) return res.status(400).json({ message: "Invalid credentials" });
+
+        // Generate both tokens
+        const { accessToken, refreshToken } = generateTokens(role);
+
+        return res.status(200).json({
+            message: "Role signin successful",
+            accessToken,
+            refreshToken,
+            user: { id: user.id }
+        });
+
+    } catch (error) {
+        console.error("Role signin error:", error);
+        return res.status(500).json({ message: "Signin failed", error });
+    }
+};
+
+
+// =====================
+// REFRESH TOKEN ROLE
+// =====================
+exports.roleRefreshToken = async (req, res) => {
+    const { token } = req.body;
+
+    if (!token) return res.status(400).json({ message: "Refresh token missing" });
+
+    try {
+        const payload = jwt.verify(token, REFRESH_SECRET);
+
+        // Fetch the user again if needed
+        const role = await Role.findById(payload.userId);
+        if (!role) return res.status(404).json({ message: "User not found" });
+
+        const { accessToken, refreshToken } = generateTokens(role);
+
+        return res.status(200).json({
+            message: "Role token refreshed",
+            accessToken,
+            refreshToken
+        });
+
+    } catch (error) {
+        console.error("Role refresh token error:", error);
+        return res.status(401).json({ message: "Invalid refresh token" });
+    }
+};
+

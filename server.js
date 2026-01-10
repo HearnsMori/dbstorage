@@ -56,6 +56,8 @@ app.use('/auth', require('./routes/auth'));
 app.use('/auth', apiLimiter);
 app.use('/user', require('./routes/user'));
 app.use('/user', apiLimiter);
+app.use('/role', require('./routes/role'));
+app.use('/role', apiLimiter);
 
 //Connecting to Database
 const mongoDBUri = process.env.MONGO_URI;

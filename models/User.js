@@ -1,13 +1,17 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Define the schema for the storage item.
+const ContactSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  value: { type: String, required: true }
+}, { _id: false });
+
 const UserSchema = new mongoose.Schema({
-    id: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: [String], defalult: [] },
-    contact: { type: [{ name: String, value: mongoose.Schema.Types.Mixed}], default: [] },
-});
+  id: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: [String], default: [] },
+  contact: { type: [ContactSchema], default: [] }
+}, { timestamps: true });
 
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
@@ -20,5 +24,4 @@ UserSchema.pre('save', async function (next) {
     }
 });
 
-// Export the Mongoose model
 module.exports = mongoose.model('User', UserSchema);
