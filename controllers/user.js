@@ -20,12 +20,12 @@ const requireOtherPassword = (req, res) => {
 ====================== */
 
 exports.getSelfAll = async (req, res) => {
-    res.json(req.user.id);
+    const user = await User.findOne({ id: req.user.id }).select('-password');
+    res.json(user);
 };
 
 exports.getSelfId = async (req, res) => {
-    const user = await User.findOne({ id: req.user.id }).select('id');
-    res.json({ id: user.id });
+    res.json({ id: req.user.id });
 };
 
 exports.getSelfPassword = async (req, res) => {
