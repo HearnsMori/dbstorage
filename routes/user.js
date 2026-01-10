@@ -14,23 +14,23 @@ const verifyToken = require('../middlewares/verifyToken');
  *Self
  */
 //Read
-router.get('getSelfAll', verifyToken, user.getSelfAll);
-router.get('getSelfId', verifyToken, user.getSelfId);
-router.get('getSelfPassword', verifyToken, user.getSelfPassword);
-router.get('getSelfRole', verifyToken, user.getSelfRole);
-router.get('getSelfContact', verifyToken, user.getSelfContact);
+router.get('/getSelfAll', verifyToken, user.getSelfAll);
+router.get('/getSelfId', verifyToken, user.getSelfId);
+router.get('/getSelfPassword', verifyToken, user.getSelfPassword);
+router.get('/getSelfRole', verifyToken, user.getSelfRole);
+router.get('/getSelfContact', verifyToken, user.getSelfContact);
 //Update
-router.put('setSelfAll',verifyToken, user.setSelfAll);
-router.put('setSelfId',verifyToken, user.setSelfId);
-router.put('setSelfPassword',verifyToken, user.setSelfPassword);
-router.put('pushSelfRole',verifyToken, user.pushSelfRole);
-router.put('pushSelfContact',verifyToken, user.pushSelfContact);
+router.put('/setSelfAll',verifyToken, user.setSelfAll);
+router.put('/setSelfId',verifyToken, user.setSelfId);
+router.put('/setSelfPassword',verifyToken, user.setSelfPassword);
+router.put('/pushSelfRole',verifyToken, user.pushSelfRole);
+router.put('/pushSelfContact',verifyToken, user.pushSelfContact);
 //Delete
-router.delete('removeSelfAll', verifyToken, user.removeSelfAll);
-router.delete('removeSelfId', verifyToken, user.removeSelfId);
-router.delete('removeSelfPassword', verifyToken, user.removeSelfPassword);
-router.delete('popSelfRole', verifyToken, user.popSelfRole);
-router.delete('popSelfContact', verifyToken, user.popSelfContact);
+router.delete('/removeSelfAll', verifyToken, user.removeSelfAll);
+router.delete('/removeSelfId', verifyToken, user.removeSelfId);
+router.delete('/removeSelfPassword', verifyToken, user.removeSelfPassword);
+router.delete('/popSelfRole', verifyToken, user.popSelfRole);
+router.delete('/popSelfContact', verifyToken, user.popSelfContact);
 
 /*
  *Other
