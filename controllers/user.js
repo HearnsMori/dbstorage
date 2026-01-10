@@ -24,7 +24,8 @@ exports.getSelfAll = async (req, res) => {
     res.json(user);
 };
 
-exports.getSelfId = (req, res) => {
+exports.getSelfId = async (req, res) => {
+    const user = await User.findOne({ id: req.userId }).select('id');
     res.json({ id: req.userId });
 };
 

@@ -232,8 +232,12 @@ class DBStorage {
   // ============= USER MANAGEMENT ====================
   // Based on uploaded backend functions
   // --------------------------------------------------
-
-  //Soon to be implemented
+  async getSelfId() {
+    const data = await this.authFetch("/auth/getSelfId", {
+      method: "GET",
+    });
+    return data;
+  }
 }
 
 const dbStorage = new DBStorage();
