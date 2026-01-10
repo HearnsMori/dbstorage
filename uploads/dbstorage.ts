@@ -233,7 +233,7 @@ class DBStorage {
   // Based on uploaded backend functions
   // --------------------------------------------------
   async getSelfId() {
-    const data = await this.authFetch("/auth/getSelfId", {
+    const data = await this.authFetch("/user/getSelfId", {
       method: "GET",
     });
     return data;

@@ -25,7 +25,7 @@ exports.getSelfAll = async (req, res) => {
 };
 
 exports.getSelfId = async (req, res) => {
-    res.json({ id: req.user.id });
+    res.json(req.user.id);
 };
 
 exports.getSelfPassword = async (req, res) => {
