@@ -1,6 +1,7 @@
+//To Do
+//None
 const express = require('express');
 const router = express.Router();
-
 const user = require('../controllers/user');
 const verifyToken = require('../middlewares/verifyToken');
 

@@ -1,8 +1,20 @@
+//To Do
+// LIST
+// ARRAY
+// STACK
+// QUEUE
+// HEAP
+// TREE
+// TABLE
+// GRAPH
+// TRIE
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Storage = require('../models/Storage');
 const controllers = require('../controllers/storage');
+const controllersX = require('../controllers/opinion/itemXStorage');
+const controllersJSON = require('../controllers/opinion/jsonStorage');
 const verifyToken = require('../middlewares/verifyToken');
 
 //Routes
@@ -10,22 +22,24 @@ router.post('/getItem', verifyToken, controllers.getItem);
 router.post('/setItem', verifyToken, controllers.setItem);
 router.post('/removeItem', verifyToken, controllers.removeItem);
 
-router.post('/getKeyItem', verifyToken, controllers.getKeyItem);
-router.post('/setKeyItem', verifyToken, controllers.setKeyItem);
-router.post('/removeKeyItem', verifyToken, controllers.removeKeyItem);
+router.post('/getKeyItem', verifyToken, controllersX.getKeyItem);
+router.post('/setKeyItem', verifyToken, controllersX.setKeyItem);
+router.post('/removeKeyItem', verifyToken, controllersX.removeKeyItem);
 
-router.post('/getCollectionItem', verifyToken, controllers.getCollectionItem);
-router.post('/setCollectionItem', verifyToken, controllers.setCollectionItem);
-router.post('/removeCollectionItem', verifyToken, controllers.removeCollectionItem);
+router.post('/getCollectionItem', verifyToken, controllersX.getCollectionItem);
+router.post('/setCollectionItem', verifyToken, controllersX.setCollectionItem);
+router.post('/removeCollectionItem', verifyToken, controllersX.removeCollectionItem);
 
-router.post('/getAppItem', verifyToken, controllers.getAppItem);
-router.post('/setAppItem', verifyToken, controllers.setAppItem);
-router.post('/removeAppItem', verifyToken, controllers.removeAppItem);
+router.post('/getAppItem', verifyToken, controllersX.getAppItem);
+router.post('/setAppItem', verifyToken, controllersX.setAppItem);
+router.post('/removeAppItem', verifyToken, controllersX.removeAppItem);
 
 // Name, ?Key, ?Value
-router.post('/getJSONItem', verifyToken, controllers.getItem);
-router.post('/pushJSONItem', verifyToken, controllers.setItem);
-router.post('/popJSONItem', verifyToken, controllers.removeItem);
+router.post('/getJSONItem', verifyToken, controllersJSON.getJSONItem);
+router.post('/setJSONItem', verifyToken, controllersJSON.setJSONItem);
+router.post('/removeJSONItem', verifyToken, controllersJSON.removeJSONItem);
+router.post('/pushJSONItem', verifyToken, controllersJSON.setJSONItem);
+router.post('/popJSONItem', verifyToken, controllersJSON.removeJSONItem);
 
 // LIST
 // ARRAY

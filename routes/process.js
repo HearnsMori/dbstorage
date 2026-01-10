@@ -1,3 +1,5 @@
+//To Do
+//To be implemented in future
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -49,7 +51,7 @@ async function generalbot(genAI, msg, expectedJSONOutput) {
     }
 }
 
-router.post('/jsonGenerator', async (req, res) => {
+router.post('/jsonAIGenerator', async (req, res) => {
     try {
         const { msg, expectedJSONOutput } = req.body;
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);

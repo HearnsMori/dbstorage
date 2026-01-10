@@ -10,6 +10,7 @@ const StorageSchema = new mongoose.Schema(
     value: { type: mongoose.Schema.Types.Mixed, required: true },
 
     getAccess: { type: [String], default: ['#all'] },
+    //For set and remove access was set by default into self in controller
     setAccess: { type: [String], default: [] },
     removeAccess: { type: [String], default: [] },
   },

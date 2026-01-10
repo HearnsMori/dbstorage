@@ -1,3 +1,5 @@
+//To Do
+//None
 const express = require('express');
 const router = express.Router();
 const controllers = require('../controllers/auth');
@@ -5,6 +7,6 @@ const controllers = require('../controllers/auth');
 //Routes
 router.post('/signup', controllers.roleSignup);
 router.post('/signin', controllers.roleSignin);
-router.post('/refreshtoken', controllers.roleRefreshToken);
+router.post('/refreshToken', controllers.roleRefreshToken);
 
 module.exports = router;

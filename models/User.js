@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const ContactSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  key: { type: String, required: true },
   value: { type: String, required: true }
 }, { _id: false });
 

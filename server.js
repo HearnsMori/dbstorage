@@ -1,3 +1,6 @@
+//To Do
+//None
+
 require('dotenv').config(); //environment variables
 const mongoose = require('mongoose'); //connect to mongodb
 const session = require('express-session');
@@ -5,6 +8,7 @@ const cors = require('cors'); //what origin to allow
 const express = require('express'); //to create server
 const helmet = require('helmet'); //protection
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 const apiLimiter = rateLimit({
     windowMs: 1000*60*15,
     max: 100,
@@ -31,8 +35,18 @@ app.get('/', (req, res) => {
     res.send("Updated December 31, 2025");
 });
 
-const path = require('path');
+app.use('/', require('./routes/storage'));
+app.use('/', apiLimiter)
+app.use('/process', require('./routes/process'));
+app.use('/process', apiLimiter)
+app.use('/auth', require('./routes/auth'));
+app.use('/auth', apiLimiter);
+app.use('/user', require('./routes/user'));
+app.use('/user', apiLimiter);
+app.use('/role', require('./routes/role'));
+app.use('/role', apiLimiter);
 
+//utils download file
 app.get('/utils/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'uploads', filename); // Assuming files are in an 'uploads' directory
@@ -46,18 +60,6 @@ app.get('/utils/:filename', (req, res) => {
         }
     });
 });
-
-app.use('/', require('./routes/storage'));
-app.use('/', apiLimiter)
-
-app.use('/process', require('./routes/process'));
-app.use('/process', apiLimiter)
-app.use('/auth', require('./routes/auth'));
-app.use('/auth', apiLimiter);
-app.use('/user', require('./routes/user'));
-app.use('/user', apiLimiter);
-app.use('/role', require('./routes/role'));
-app.use('/role', apiLimiter);
 
 //Connecting to Database
 const mongoDBUri = process.env.MONGO_URI;

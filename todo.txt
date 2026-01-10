@@ -1,5 +1,12 @@
-MRCI (Models, Routes, Controllers, Implementation Integration with Other Model)
-User - 
-Role - MRCI
-Storage - MRCI
-Process - MRCI
+To Do:
+
+dbstorage/routes:
+/opinion
+
+dbstorage/controllers:
+/storage.js
+/user.js
+/process.js
+
+dbstorage/uploads:
+/typescript.ts
