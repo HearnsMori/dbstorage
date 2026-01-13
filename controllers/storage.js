@@ -14,13 +14,13 @@ const exactSetKeyFilter = ({ app, collectionName, collectionKey, key }) => {
 };
 
 const exactGetKeyFilter = ({ app, collectionName, collectionKey, key, value }) => {
-  return {
-    ...(app != null ? { app } : {}),
-    ...(collectionName != null ? { collectionName } : {}),
-    ...(collectionKey != null ? { collectionKey } : {}),
-    ...(key != null ? { key } : {}),
-    ...(value != null ? { value } : {}),
-  };
+    return {
+        ...(app != null ? { app } : {}),
+        ...(collectionName != null ? { collectionName } : {}),
+        ...(collectionKey != null ? { collectionKey } : {}),
+        ...(key != null ? { key } : {}),
+        ...(value != null ? { value } : {}),
+    };
 };
 
 
@@ -170,6 +170,45 @@ exports.setItem = async (req, res) => {
     }
 };
 
+
+function generateZippedGet(body) {
+    const fields = [
+        'app',
+        'collectionName',
+        'collectionKey',
+        'key',
+        'value'
+    ];
+
+    const arrays = {};
+    let max = 1;
+
+    // Normalize to arrays & find max length
+    for (const f of fields) {
+        arrays[f] = toArray(body[f]);
+        if (arrays[f]?.length > max) max = arrays[f].length;
+    }
+
+    const items = [];
+
+    for (let i = 0; i < max; i++) {
+        const item = {};
+
+        for (const f of fields) {
+            if (!arrays[f]) continue;
+
+            const src = arrays[f];
+            let val = src[i] ?? src[0];
+
+            item[f] = val;
+        }
+
+        items.push(item);
+    }
+    console.log('Generated zipped items:', items);
+    return items;
+}
+
 /* =========================================================
    GET ITEM (ACL STRICT, #all AWARE)
 ========================================================= */
@@ -179,7 +218,7 @@ exports.getItem = async (req, res) => {
         return res.status(401).json({ error: 'token expired' });
 
     try {
-        const filters = generateZipped(req.body).map(exactGetKeyFilter);
+        const filters = generateZippedGet(req.body).map(exactGetKeyFilter);
         console.log(filters);
         const docs = await Storage.find(
             filters.length > 1 ? { $or: filters } : filters[0]
@@ -189,13 +228,19 @@ exports.getItem = async (req, res) => {
             (doc) => hasAccess(doc, req.user.id, 'get')
         );
 
+        console.log('Accepted docs:', accepted);
+
         const output = {};
 
         accepted.forEach(({ app, collectionName, collectionKey, key, value }) => {
-            output[app] ??= {};
-            output[app][collectionName] ??= { collectionKey };
+            if (!output[app]) output[app] = {};
+            if (!output[app][collectionName]) output[app][collectionName] = { collectionKey };
+            // Keep existing keys, add new key
             output[app][collectionName][key] = value;
         });
+
+
+        console.log('getItem output:', output);
 
         res.json(output);
     } catch (err) {

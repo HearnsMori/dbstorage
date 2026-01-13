@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 function extractJsonFromString(msgText) {
+    console.log("AI Response Text:", msgText);
     // Extract from first { to last } as before
     const firstBrace = msgText.indexOf('{');
     const lastBrace = msgText.lastIndexOf('}');
@@ -10,8 +11,15 @@ function extractJsonFromString(msgText) {
 
     let jsonStr = msgText.substring(firstBrace, lastBrace + 1);
 
-    // Replace single quotes with double quotes
-    jsonStr = jsonStr.replace(/'/g, '"');
+    console.log("Extracted JSON String:", jsonStr);
+
+    
+    jsonStr = jsonStr
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/'/g, "&#039;");
+    
 
     try {
         return JSON.parse(jsonStr);
@@ -29,8 +37,10 @@ async function generalbot(genAI, msg, expectedJSONOutput) {
         const learningContextPrompt = "You are a generative agent AI chatbot."
             + "\nYour message should be in this format only, don't add any more: \n"
             + expectedJSONOutput
-            + "\nRespond only with the required format.";
+            + "\nRespond only with the required format."
+            + "\nDon't use \" inside key or value and make sure the JSON is properly formatted and can be parse without an error.";
         // Combine the learning context with the user’s prompt
+        console.log(expectedJSONOutput);
         const fullPrompt = `${learningContextPrompt} \nUser (message): ${msg}`;
 
         // Generate content based on the combined prompt
@@ -49,12 +59,12 @@ async function generalbot(genAI, msg, expectedJSONOutput) {
 exports.aiJSONGenerator = async (req, res) => {
     try {
         const { msg, expectedJSONOutput } = req.body;
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_FIVE);
         const botresponse = await generalbot(genAI, msg, expectedJSONOutput);
         const parsed = extractJsonFromString(botresponse);
-        res.json(parsed);
+        res.status(201).json(parsed);
     } catch (error) {
-        console.error("Error handling /process/jsonGenerator request:", error);
+        console.error("Error handling /process/aiJSONGenerator request:", error);
         res.status(500).json({ msg: "Internal Server Error" });
     }
 }

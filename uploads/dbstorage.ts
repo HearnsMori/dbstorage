@@ -6,7 +6,7 @@ export interface LoginResponse {
 }
 
 class DBStorage {
-  private baseURL = "https://dbstorage.onrender.com"; // <-- change to your backend
+  private /*baseURL = "https://dbstorage.onrender.com";*/ baseURL = "http://localhost:10000";
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
 
@@ -66,7 +66,7 @@ class DBStorage {
   private async refreshAuth() {
     const res = await fetch(`${this.baseURL}/auth/refreshToken`, {
       method: "POST",
-      body: JSON.stringify({ token: localStorage.getItem("refreshToken") }),
+      body: JSON.stringify({ token: this.refreshToken }),
       headers: {
         Authorization: "Bearer " + this.accessToken || "",
         "Content-Type": "application/json",
@@ -111,9 +111,9 @@ class DBStorage {
     collectionKey: string | string[],
     key: string | string[],
     value: any,
-    getAccess: string[] | null = null,
-    setAccess: string[] | null = null,
-    removeAccess: string[] | null = null
+    getAccess: string[],
+    setAccess: string[],
+    removeAccess: string[]
   ) {
     const data = await this.authFetch("/setItem", {
       method: "POST",
@@ -232,11 +232,36 @@ class DBStorage {
   // ============= USER MANAGEMENT ====================
   // Based on uploaded backend functions
   // --------------------------------------------------
-  async getSelfId() {
+  async getSelfId<T = any>() {
     const data = await this.authFetch("/user/getSelfId", {
       method: "GET",
     });
-    return data;
+    return data as T;
+  }
+
+  async setSelfId(id: string) {
+    const data = await this.authFetch("/user/getSelfId", {
+      method: "PUT",
+      body: JSON.stringify({id: id}),
+    });
+  }
+
+  async setSelfPassword(password: string) {
+    const data = await this.authFetch("/user/getSelfId", {
+      method: "PUT",
+      body: JSON.stringify({password: password}),
+    });
+  }
+
+  //------------------------------------------------
+  //=========== Artificial Intelligence ============
+  //------------------------------------------------
+  async aiTXTGenerator<T = any>(msg: String) {
+    const data = await this.authFetch("/process/generator/aiTXTGenerator", {
+      method: "POST",
+      body: JSON.stringify({msg: msg}),
+    });
+    return data as T;
   }
 }
 
