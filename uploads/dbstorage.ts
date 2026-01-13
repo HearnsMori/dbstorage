@@ -6,7 +6,9 @@ export interface LoginResponse {
 }
 
 class DBStorage {
-  private /*baseURL = "https://dbstorage.onrender.com";*/ baseURL = "http://localhost:10000";
+  private baseURL = "https://dbstorage.onrender.com"; 
+  //For testing
+  //private baseURL = "http://localhost:10000";
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
 
