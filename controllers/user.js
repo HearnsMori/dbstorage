@@ -1,5 +1,27 @@
 const User = require('../models/User');
-const Role = require('../models/User');
+const Role = require('../models/Role');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || "ACCESS_SECRET_KEY";
+
+// =====================
+// GENERATE TOKENS
+// =====================
+function generateTokens(user) {
+    const accessToken = jwt.sign(
+        { userId: user._id, id: user.id },
+        JWT_SECRET,
+        { expiresIn: "15m" }  // short lifespan (recommended)
+    );
+
+    const refreshToken = jwt.sign(
+        { userId: user._id, id: user.id },
+        REFRESH_SECRET,
+        { expiresIn: "7d" }   // long lifespan
+    );
+
+    return { accessToken, refreshToken };
+}
 
 /* ======================
    SHARED PASSWORD GUARD
@@ -39,7 +61,7 @@ exports.getSelfRole = async (req, res) => {
 };
 
 exports.getSelfContact = async (req, res) => {
-    const user = await User.findOne({ id:  req.user.id }).select('contact');
+    const user = await User.findOne({ id: req.user.id }).select('contact');
     res.json(user.contact);
 };
 
@@ -48,19 +70,25 @@ exports.getSelfContact = async (req, res) => {
 ====================== */
 
 exports.setSelfAll = async (req, res) => {
-    const user = await User.findOne({ id:  req.user.id });
+    const user = await User.findOne({ id: req.user.id });
     Object.assign(user, req.body);
     await user.save();
     res.json({ success: true });
 };
 
 exports.setSelfId = async (req, res) => {
-    await User.updateOne({ id:  req.user.id }, { id: req.body.id });
-    res.json({ success: true });
+    await User.updateOne({ id: req.user.id }, { id: req.body.id });
+    
+    const user = await User.findOne({ id });
+    
+    // Generate both tokens
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    res.json({ success: true, accessToken, refreshToken });
 };
 
 exports.setSelfPassword = async (req, res) => {
-    const user = await User.findOne({ id:  req.user.id });
+    const user = await User.findOne({ id: req.user.id });
     user.password = req.body.password;
     await user.save();
     res.json({ success: true });
@@ -69,7 +97,7 @@ exports.setSelfPassword = async (req, res) => {
 exports.pushSelfRole = async (req, res) => {
 
     await User.updateOne(
-        { id:  req.user.id },
+        { id: req.user.id },
         { $addToSet: { role: req.body.role } }
     );
     res.json({ success: true });
@@ -77,7 +105,7 @@ exports.pushSelfRole = async (req, res) => {
 
 exports.pushSelfContact = async (req, res) => {
     await User.updateOne(
-        { id:  req.user.id },
+        { id: req.user.id },
         { $push: { contact: req.body } }
     );
     res.json({ success: true });
@@ -88,7 +116,7 @@ exports.pushSelfContact = async (req, res) => {
 ====================== */
 
 exports.removeSelfAll = async (req, res) => {
-    await User.deleteOne({ id:  req.user.id });
+    await User.deleteOne({ id: req.user.id });
     res.json({ success: true });
 };
 
@@ -98,7 +126,7 @@ exports.removeSelfId = (_, res) => {
 
 exports.removeSelfPassword = async (req, res) => {
     await User.updateOne(
-        { id:  req.user.id },
+        { id: req.user.id },
         { $unset: { password: "" } }
     );
     res.json({ success: true });
@@ -106,7 +134,7 @@ exports.removeSelfPassword = async (req, res) => {
 
 exports.popSelfRole = async (req, res) => {
     await User.updateOne(
-        { id:  req.user.id },
+        { id: req.user.id },
         { $pull: { role: req.body.role } }
     );
     res.json({ success: true });
@@ -114,7 +142,7 @@ exports.popSelfRole = async (req, res) => {
 
 exports.popSelfContact = async (req, res) => {
     await User.updateOne(
-        { id:  req.user.id },
+        { id: req.user.id },
         { $pull: { contact: { name: req.body.name } } }
     );
     res.json({ success: true });

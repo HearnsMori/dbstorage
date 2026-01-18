@@ -223,7 +223,7 @@ exports.getItem = async (req, res) => {
         const docs = await Storage.find(
             filters.length > 1 ? { $or: filters } : filters[0]
         );
-
+        console.log(docs);
         const accepted = docs.filter(
             (doc) => hasAccess(doc, req.user.id, 'get')
         );

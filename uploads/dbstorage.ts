@@ -6,7 +6,8 @@ export interface LoginResponse {
 }
 
 class DBStorage {
-  private baseURL = "https://dbstorage.onrender.com"; 
+  //For deployment
+  private baseURL = "https://dbstorage.onrender.com";
   //For testing
   //private baseURL = "http://localhost:10000";
   private accessToken: string | null = null;
@@ -57,10 +58,8 @@ class DBStorage {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, password }),
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data?.message || "Login failed");
-
     this.storeTokens(data.accessToken, data.refreshToken);
     return data;
   }
@@ -74,10 +73,8 @@ class DBStorage {
         "Content-Type": "application/json",
       },
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error("Refresh token invalid");
-
     this.storeTokens(data.accessToken, data.refreshToken);
   }
 
@@ -94,6 +91,10 @@ class DBStorage {
       },
     });
     const data = await res.json().catch(() => ({}));
+    if(data.accessToken && data.refreshToken) {
+      //alert("Storing new tokens from authFetch");
+      this.storeTokens(data.accessToken, data.refreshToken);
+    }
     if (res.status === 401) {
       await this.refreshAuth();
       return this.authFetch(path, options);
@@ -241,18 +242,21 @@ class DBStorage {
     return data as T;
   }
 
+  //not yet available
   async setSelfId(id: string) {
-    const data = await this.authFetch("/user/getSelfId", {
+    const data = await this.authFetch("/user/setSelfId", {
       method: "PUT",
-      body: JSON.stringify({id: id}),
+      body: JSON.stringify({ id: id }),
     });
+    return data;
   }
 
   async setSelfPassword(password: string) {
-    const data = await this.authFetch("/user/getSelfId", {
+    const data = await this.authFetch("/user/setSelfPassword", {
       method: "PUT",
-      body: JSON.stringify({password: password}),
+      body: JSON.stringify({ password: password }),
     });
+    return data;
   }
 
   //------------------------------------------------
@@ -261,7 +265,7 @@ class DBStorage {
   async aiTXTGenerator<T = any>(msg: String) {
     const data = await this.authFetch("/process/generator/aiTXTGenerator", {
       method: "POST",
-      body: JSON.stringify({msg: msg}),
+      body: JSON.stringify({ msg: msg }),
     });
     return data as T;
   }
