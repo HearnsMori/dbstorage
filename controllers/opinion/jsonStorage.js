@@ -89,7 +89,7 @@ exports.setJSONItem = async (req, res) => {
    body.value = { someKey: any }
 ========================================================= */
 
-exports.pushJSONItem = async (req, res) => {
+exports.pushJSONManyItem = async (req, res) => {
   if (!req.user?.id)
     return res.status(401).json({ error: 'token expired' });
 
@@ -129,7 +129,77 @@ exports.pushJSONItem = async (req, res) => {
    body.value = "keyToRemove"
 ========================================================= */
 
-exports.popJSONItem = async (req, res) => {
+exports.popJSONManyItem = async (req, res) => {
+  if (!req.user?.id)
+    return res.status(401).json({ error: 'token expired' });
+
+  const filter = keyFilter(req.body);
+  const popKey = req.body.value;
+
+  if (typeof popKey !== 'string')
+    return res.status(400).json({ error: 'value must be key string' });
+
+  const doc = await Storage.findOne(filter);
+  if (!doc || !hasAccess(doc, req.user.id, 'remove'))
+    return res.status(403).json({ error: 'remove access denied' });
+
+  const json = safeParse(doc.value);
+  delete json[popKey];
+
+  await Storage.updateOne(
+    filter,
+    { $set: { value: JSON.stringify(json) } }
+  );
+
+  res.json({ message: 'key removed' });
+};
+
+/* =========================================================
+   PUSH JSON KEY
+   body.value = { someKey: any }
+========================================================= */
+
+exports.pushJSONOneItem = async (req, res) => {
+  if (!req.user?.id)
+    return res.status(401).json({ error: 'token expired' });
+
+  const filter = keyFilter(req.body);
+  const patch = req.body.value;
+
+  if (!patch || typeof patch !== 'object')
+    return res.status(400).json({ error: 'value must be object' });
+
+  const doc = await Storage.findOne(filter);
+
+  if (doc && !hasAccess(doc, req.user.id, 'set'))
+    return res.status(403).json({ error: 'set access denied' });
+
+  const base = doc ? safeParse(doc.value) : {};
+  const merged = { ...base, ...patch };
+
+  await Storage.updateOne(
+    filter,
+    {
+      $set: {
+        ...filter,
+        value: JSON.stringify(merged),
+        getAccess: doc?.getAccess ?? ['#all'],
+        setAccess: doc?.setAccess ?? [req.user.id],
+        removeAccess: doc?.removeAccess ?? [req.user.id],
+      },
+    },
+    { upsert: true }
+  );
+
+  res.json({ message: 'key pushed' });
+};
+
+/* =========================================================
+   POP JSON KEY
+   body.value = "keyToRemove"
+========================================================= */
+
+exports.popJSONOneItem = async (req, res) => {
   if (!req.user?.id)
     return res.status(401).json({ error: 'token expired' });
 

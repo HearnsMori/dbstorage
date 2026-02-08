@@ -39,6 +39,8 @@ const requireOtherPassword = (req, res) => {
 
 /* ======================
    SELF — READ
+   Doesn't Need Payload
+   Complete
 ====================== */
 
 exports.getSelfAll = async (req, res) => {
@@ -66,7 +68,9 @@ exports.getSelfContact = async (req, res) => {
 };
 
 /* ======================
-   SELF — UPDATE
+    SELF — UPDATE
+    Need Model Key = Body Key
+    Complete
 ====================== */
 
 exports.setSelfAll = async (req, res) => {
@@ -77,14 +81,15 @@ exports.setSelfAll = async (req, res) => {
 };
 
 exports.setSelfId = async (req, res) => {
+    const user = await User.findOne({ id: req.body.id });
+    if(user) {
+        res.status(400).json({ error: `User with value ${req.body.id} already exist.`});
+    }
+
     await User.updateOne({ id: req.user.id }, { id: req.body.id });
-    
-    const user = await User.findOne({ id });
-    
     // Generate both tokens
     const { accessToken, refreshToken } = generateTokens(user);
-
-    res.json({ success: true, accessToken, refreshToken });
+    res.json({ success: true, accessToken, refreshToken, id: req.body.id });
 };
 
 exports.setSelfPassword = async (req, res) => {
@@ -95,7 +100,6 @@ exports.setSelfPassword = async (req, res) => {
 };
 
 exports.pushSelfRole = async (req, res) => {
-
     await User.updateOne(
         { id: req.user.id },
         { $addToSet: { role: req.body.role } }
@@ -106,13 +110,15 @@ exports.pushSelfRole = async (req, res) => {
 exports.pushSelfContact = async (req, res) => {
     await User.updateOne(
         { id: req.user.id },
-        { $push: { contact: req.body } }
+        { $addToSet: { contact: req.body.contact } }
     );
     res.json({ success: true });
 };
 
 /* ======================
-   SELF — DELETE
+    SELF — DELETE
+    Need Model Key = Body Key
+    Complete
 ====================== */
 
 exports.removeSelfAll = async (req, res) => {
@@ -120,16 +126,12 @@ exports.removeSelfAll = async (req, res) => {
     res.json({ success: true });
 };
 
-exports.removeSelfId = (_, res) => {
+exports.removeSelfId = (req, res) => {
     res.status(400).json({ error: 'Cannot remove id only' });
 };
 
 exports.removeSelfPassword = async (req, res) => {
-    await User.updateOne(
-        { id: req.user.id },
-        { $unset: { password: "" } }
-    );
-    res.json({ success: true });
+    res.status(400).json({ error: 'Cannot remove password only' });
 };
 
 exports.popSelfRole = async (req, res) => {
@@ -150,6 +152,7 @@ exports.popSelfContact = async (req, res) => {
 
 /* ======================
    OTHER — READ
+   Same with Self but with ID
 ====================== */
 
 exports.getOtherAll = async (req, res) => {
@@ -184,30 +187,19 @@ exports.getOtherContact = async (req, res) => {
 
 /* ======================
    OTHER — UPDATE
+   Same with Self but with ID
 ====================== */
 
 exports.setOtherAll = async (req, res) => {
-    const user = await User.findOne({ id: req.body.id });
-    Object.assign(user, req.body);
-    await user.save();
-    res.json({ success: true });
+    res.status(400).json({ error: 'Cannot set other auth info' });
 };
 
 exports.setOtherId = async (req, res) => {
-    await User.updateOne(
-        { id: req.body.id },
-        { id: req.body.newId }
-    );
-    res.json({ success: true });
+    res.status(400).json({ error: 'Cannot set other auth info' });
 };
 
 exports.setOtherPassword = async (req, res) => {
-    if (!requireOtherPassword(req, res)) return;
-
-    const user = await User.findOne({ id: req.body.id });
-    user.password = req.body.newPassword;
-    await user.save();
-    res.json({ success: true });
+    res.status(400).json({ error: 'Cannot set other auth info' });
 };
 
 exports.pushOtherRole = async (req, res) => {
@@ -221,17 +213,12 @@ exports.pushOtherRole = async (req, res) => {
 };
 
 exports.pushOtherContact = async (req, res) => {
-    if (!requireOtherPassword(req, res)) return;
-
-    await User.updateOne(
-        { id: req.body.id },
-        { $push: { contact: req.body.contact } }
-    );
-    res.json({ success: true });
+    res.status(400).json({ error: 'Cannot set other auth info' });
 };
 
 /* ======================
    OTHER — DELETE
+   Same with Self but with ID
 ====================== */
 
 exports.removeOtherAll = async (req, res) => {
@@ -264,11 +251,5 @@ exports.popOtherRole = async (req, res) => {
 };
 
 exports.popOtherContact = async (req, res) => {
-    if (!requireOtherPassword(req, res)) return;
-
-    await User.updateOne(
-        { id: req.body.id },
-        { $pull: { contact: { name: req.body.name } } }
-    );
-    res.json({ success: true });
+    res.status(400).json({ error: 'Cannot set other auth info' });
 };

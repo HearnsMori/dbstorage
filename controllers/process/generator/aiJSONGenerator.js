@@ -59,7 +59,7 @@ async function generalbot(genAI, msg, expectedJSONOutput) {
 exports.aiJSONGenerator = async (req, res) => {
     try {
         const { msg, expectedJSONOutput } = req.body;
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_FIVE);
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const botresponse = await generalbot(genAI, msg, expectedJSONOutput);
         const parsed = extractJsonFromString(botresponse);
         res.status(201).json(parsed);

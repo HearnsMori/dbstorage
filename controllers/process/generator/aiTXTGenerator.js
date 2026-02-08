@@ -19,7 +19,7 @@ async function generalbot(genAI, msg) {
 exports.aiTXTGenerator = async (req, res) => {
     try {
         const { msg } = req.body;
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_FOUR);
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const botresponse = await generalbot(genAI, msg);
         res.status(201).json({msg: botresponse});
     } catch (error) {

@@ -38,8 +38,10 @@ router.post('/removeAppItem', verifyToken, controllersX.removeAppItem);
 router.post('/getJSONItem', verifyToken, controllersJSON.getJSONItem);
 router.post('/setJSONItem', verifyToken, controllersJSON.setJSONItem);
 router.post('/removeJSONItem', verifyToken, controllersJSON.removeJSONItem);
-router.post('/pushJSONItem', verifyToken, controllersJSON.setJSONItem);
-router.post('/popJSONItem', verifyToken, controllersJSON.removeJSONItem);
+router.post('/pushJSONManyItem', verifyToken, controllersJSON.pushJSONManyItem);
+router.post('/popJSONManyItem', verifyToken, controllersJSON.popJSONManyItem);
+router.post('/pushJSONOneItem', verifyToken, controllersJSON.pushJSONOneItem);
+router.post('/popJSONOneItem', verifyToken, controllersJSON.popJSONOneItem);
 
 // LIST
 // ARRAY

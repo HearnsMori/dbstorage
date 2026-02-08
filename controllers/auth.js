@@ -35,7 +35,7 @@ function generateTokens(user) {
 // =====================
 exports.signup = async (req, res) => {
     try {
-        const { id, password, role, contact } = req.body;
+        const { id, password, contact } = req.body;
 
         // Check if already exists
         const exists = await User.findOne({ id });
@@ -43,12 +43,12 @@ exports.signup = async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
         }
 
-        const user = new User({ id, password, role, contact });
+        const user = new User({ id, password, contact });
         await user.save();
 
         return res.status(201).json({
             message: "Signup successful",
-            user: { id: user.id }
+            id: user.id
         });
     } catch (error) {
         console.error("Signup error:", error);
@@ -77,7 +77,7 @@ exports.signin = async (req, res) => {
             message: "Signin successful",
             accessToken,
             refreshToken,
-            user: { id: user.id }
+            id: user.id
         });
 
     } catch (error) {
@@ -107,7 +107,8 @@ exports.refreshToken = async (req, res) => {
         return res.status(200).json({
             message: "Token refreshed",
             accessToken,
-            refreshToken
+            refreshToken,
+            id: user.id,
         });
 
     } catch (error) {
