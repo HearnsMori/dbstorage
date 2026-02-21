@@ -10,11 +10,15 @@ const API_KEYS = [
 
 ];
 
-async function generalbot(msg) {
+async function generalbot(msg, context) {
   for (let i = 0; i < API_KEYS.length; i++) {
     try {
       const genAI = new GoogleGenerativeAI(API_KEYS[i]);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        // This is your 'context' or persona
+        systemInstruction: context,
+      });
       const result = await model.generateContent(msg);
       const response = await result.response;
       const text = await response.text();
@@ -37,8 +41,8 @@ async function generalbot(msg) {
 
 exports.aiTXTGenerator = async (req, res) => {
   try {
-    const { msg } = req.body;
-    const botresponse = await generalbot(msg);
+    const { msg, context } = req.body;
+    const botresponse = await generalbot(msg, context);
     res.status(201).json({ msg: botresponse });
   } catch (error) {
     console.error("Error handling /process/aiTXTGenerator request:", error);

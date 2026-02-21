@@ -7,9 +7,9 @@ export interface LoginResponse {
 
 class DBStorage {
   //For deployment
-  private baseURL = "https://dbstorage.onrender.com";
+  //private baseURL = "https://dbstorage.onrender.com";
   //For testing
-  //private baseURL = "http://localhost:10000";
+  private baseURL = "http://localhost:10000";
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
 
@@ -262,10 +262,18 @@ class DBStorage {
   //------------------------------------------------
   //=========== Artificial Intelligence ============
   //------------------------------------------------
-  async aiTXTGenerator<T = any>(msg: String) {
+  async aiTXTGenerator<T = any>(msg: String, context: String) {
     const data = await this.authFetch("/process/generator/aiTXTGenerator", {
       method: "POST",
-      body: JSON.stringify({ msg: msg }),
+      body: JSON.stringify({ msg: msg, context: context }),
+    });
+    return data as T;
+  }
+
+  async aiJSONGenerator<T = any>(msg: JSON) {
+    const data = await this.authFetch("/process/generator/aiJSONGenerator", {
+      method: "POST",
+      body: JSON.stringify(msg),
     });
     return data as T;
   }
