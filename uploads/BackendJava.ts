@@ -140,3 +140,29 @@ public class Backend {
         void onError(String error);
     }
 }
+
+//implementation("com.squareup.okhttp3:okhttp:4.12.0")
+//implementation("com.google.code.gson:gson:2.10.1")  
+//<uses-permission android:name="android.permission.INTERNET"/>
+//
+//Example Usage:
+//try {
+//Backend.init(this);
+//   JSONObject json = new JSONObject();
+//                    json.put("id", myEditText.getText().toString());
+//                    json.put("password", myEditTextPassword.getText().toString());
+//                    Backend.request("/auth/signin", "POST", json,
+//                            new Backend.ApiCallback() {
+//                                @Override
+//                                public void onSuccess(String response) throws JSONException {
+//                                    Log.d("mainact", "success"+response);
+//                                    JSONObject obj = new JSONObject(response);
+//                                    String token = obj.getString("accessToken");
+//                                }
+//                                @Override
+//                                public void onError(String error) {
+//                                    Log.d("mainact", "error"+error);
+//                                }
+//                            });
+//} catch (Exception e) {log.d("tag", e.toString()) }
+//
