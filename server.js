@@ -32,13 +32,66 @@ app.use(express.json({limit: '1mb'}));
 app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 app.get('/', (req, res) => {
-    res.send("Updated February 22, 2026 3:04 AM");
+    res.send(`Updated 2026 March 11
+        # - endpoint
+        #getItem
+        in: app, collectionName, collectionKey, key, value
+        out: [app[collectionName[collectionKey, key: value]]]
+        #(setItem | removeItem)
+        in: app, collectionName, collectionKey, key, value
+        out: message, (affected | denied)
+        /auth
+        /user
+        /role
+        /process
+    `);
+});
+
+app.get('/auth', (req, res) => {
+    res.send(`Updated 2026 March 11
+        #signup
+        in: id, password, contact
+        out: message, id
+        #signin
+        in: id, password
+        out: message, accessToken, refreshToken
+        #refreshToken
+        in: token
+        out: message, accessToken, refreshToken
+        #recover
+        in: id, contact
+        out: message
+    `);
+});
+
+app.get('/user', (req, res) => {
+    res.send(`Updated 2026 March 11
+        #get(Self | Other)X
+        in: X
+        out: (self | other)X
+        #(set | push | pop)(Self | Other)X
+        in: (success | error)
+    `);
+});
+
+app.get('/role', (req, res) => {
+    res.send(`Updated 2026 March 11
+        #soon
+    `);
+});
+
+app.get('/process', (req, res) => {
+    res.send(`Updated 2026 March 11
+        /generator/aiTXTGenerator
+        in: message
+        out: (message | error)
+    `);
 });
 
 app.use('/', apiLimiter, require('./routes/storage'));
-app.use('/process', apiLimiter, require('./routes/process'));
 app.use('/auth', apiLimiter, require('./routes/auth'));
 app.use('/user', apiLimiter, require('./routes/user'));
+app.use('/process', apiLimiter, require('./routes/process'));
 app.use('/role', apiLimiter, require('./routes/role'));
 
 //utils download file

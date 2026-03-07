@@ -45,26 +45,26 @@ const requireOtherPassword = (req, res) => {
 
 exports.getSelfAll = async (req, res) => {
     const user = await User.findOne({ id: req.user.id }).select('-password');
-    res.json(user);
+    res.json({ user });
 };
 
 exports.getSelfId = async (req, res) => {
-    res.json(req.user.id);
+    res.json({ id: req.user.id });
 };
 
 exports.getSelfPassword = async (req, res) => {
     const user = await User.findOne({ id: req.user.id }).select('password');
-    res.json(user.password);
+    res.json({ password: user.password });
 };
 
 exports.getSelfRole = async (req, res) => {
     const user = await User.findOne({ id: req.user.id }).select('role');
-    res.json(user.role);
+    res.json({ role: user.role });
 };
 
 exports.getSelfContact = async (req, res) => {
     const user = await User.findOne({ id: req.user.id }).select('contact');
-    res.json(user.contact);
+    res.json({ contact: user.contact });
 };
 
 /* ======================
@@ -157,7 +157,7 @@ exports.popSelfContact = async (req, res) => {
 
 exports.getOtherAll = async (req, res) => {
     const user = await User.findOne({ id: req.body.id }).select('-password');
-    res.json(user);
+    res.json({ user });
 };
 
 exports.getOtherId = (req, res) => {
@@ -168,21 +168,21 @@ exports.getOtherPassword = async (req, res) => {
     if (!requireOtherPassword(req, res)) return;
 
     const user = await User.findOne({ id: req.body.id }).select('password');
-    res.json(user.password);
+    res.json({ password: user.password });
 };
 
 exports.getOtherRole = async (req, res) => {
     if (!requireOtherPassword(req, res)) return;
 
     const user = await User.findOne({ id: req.body.id }).select('role');
-    res.json(user.role);
+    res.json({ role: user.role });
 };
 
 exports.getOtherContact = async (req, res) => {
     if (!requireOtherPassword(req, res)) return;
 
     const user = await User.findOne({ id: req.body.id }).select('contact');
-    res.json(user.contact);
+    res.json({ contact: user.contact });
 };
 
 /* ======================
