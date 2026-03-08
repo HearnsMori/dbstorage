@@ -10,7 +10,7 @@ const API_KEYS = [
 
 ];
 
-async function generalbot(msg, context) {
+async function generalbot(message, context) {
   for (let i = 0; i < API_KEYS.length; i++) {
     try {
       const genAI = new GoogleGenerativeAI(API_KEYS[i]);
@@ -19,7 +19,7 @@ async function generalbot(msg, context) {
         // This is your 'context' or persona
         systemInstruction: context,
       });
-      const result = await model.generateContent(msg);
+      const result = await model.generateContent(message);
       const response = await result.response;
       const text = await response.text();
 
@@ -41,11 +41,11 @@ async function generalbot(msg, context) {
 
 exports.aiTXTGenerator = async (req, res) => {
   try {
-    const { msg, context } = req.body;
-    const botresponse = await generalbot(msg, context);
-    res.status(201).json({ msg: botresponse });
+    const { message, context } = req.body;
+    const botresponse = await generalbot(message, context);
+    res.status(201).json({ message: botresponse });
   } catch (error) {
     console.error("Error handling /process/aiTXTGenerator request:", error);
-    res.status(500).json({ msg: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
