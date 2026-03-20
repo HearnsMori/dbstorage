@@ -91,7 +91,7 @@ class DBStorage {
       },
     });
     const data = await res.json().catch(() => ({}));
-    if(data.accessToken && data.refreshToken) {
+    if (data.accessToken && data.refreshToken) {
       //alert("Storing new tokens from authFetch");
       this.storeTokens(data.accessToken, data.refreshToken);
     }
@@ -159,77 +159,110 @@ class DBStorage {
   // --------------------------------------------------
   // ============= JSON STORAGE =======================
   // --------------------------------------------------
+  private JSONData: JSON = {} as JSON;
 
-  async getJSONItem<T = any>(
-    app: string,
-    collectionName: string,
-    collectionKey: string,
-    key: string
-  ): Promise<T> {
-    const data = await this.authFetch("/getJSONItem", {
-      method: "POST",
-      body: JSON.stringify({ app, collectionName, collectionKey, key }),
-    });
-
-    return data as T;
+  async loadJSONData(app: string, collectionName: string, collectionKey: string, key: string, value: any) {
+    const data = await this.getItem(app, collectionName, collectionKey, key, value);
+    if (data === null) {
+      this.JSONData = {} as JSON;
+      return;
+    }
+    this.JSONData = JSON.parse(data[app][collectionName][key] || "{}");
+    //alert("Loaded JSON Data: " + JSON.stringify(this.JSONData));
+  }
+  async storeJSONData(app: string, collectionName: string, collectionKey: string, key: string, value: any, setAccess: string[], getAccess: string[], removeAccess: string[]) {
+    await this.setItem(app, collectionName, collectionKey, key, JSON.stringify(this.JSONData), setAccess, getAccess, removeAccess);
   }
 
-  async setJSONItem(
-    app: string,
-    collectionName: string,
-    collectionKey: string,
-    key: string,
-    value: Record<string, any>
-  ) {
-    return await this.authFetch("/setJSONItem", {
-      method: "POST",
-      body: JSON.stringify({ app, collectionName, collectionKey, key, value }),
-    });
+  getJSONData<T = any>(): T {
+    return this.JSONData as T;
   }
 
-  async pushJSONItem(
-    app: string,
-    collectionName: string,
-    collectionKey: string,
-    key: string,
-    value: Record<string, any>
-  ) {
-    return await this.authFetch("/pushJSONItem", {
-      method: "POST",
-      body: JSON.stringify({ app, collectionName, collectionKey, key, value }),
-    });
+  setJSONData(newData: JSON) {
+    this.JSONData = newData;
   }
 
-  async popJSONItem(
-    app: string,
-    collectionName: string,
-    collectionKey: string,
-    key: string,
-    popKey: string
-  ) {
-    return await this.authFetch("/popJSONItem", {
-      method: "POST",
-      body: JSON.stringify({
-        app,
-        collectionName,
-        collectionKey,
-        key,
-        value: popKey,
-      }),
-    });
+  pushJSONData(path: string[], value: any): void {
+    // Clone path to avoid mutating the original array passed as an argument
+    const keys = [...path];
+    const lastKey = keys.pop();
+    if (!lastKey) return;
+
+    let current = this.JSONData as any;
+
+    // Traverse the path, creating objects if they don't exist
+    for (const key of keys) {
+      if (current[key] === undefined || current[key] === null) {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+
+    // Ensure the target property is an array
+    if (!Array.isArray(current[lastKey])) {
+      current[lastKey] = [];
+    }
+
+    current[lastKey].push(value);
   }
 
-  async removeJSONItem(
-    app: string,
-    collectionName: string,
-    collectionKey: string,
-    key: string
-  ) {
-    return await this.authFetch("/removeJSONItem", {
-      method: "POST",
-      body: JSON.stringify({ app, collectionName, collectionKey, key }),
-    });
+  popJSONData(path: string[], findFn: (item: any) => boolean): any | null {
+  const keys = [...path];
+  const lastKey = keys.pop();
+  if (!lastKey) return null;
+
+  let current = this.JSONData as any;
+
+  // Traverse to find the parent object
+  for (const key of keys) {
+    if (current[key] === undefined || current[key] === null) {
+      return null;
+    }
+    current = current[key];
   }
+
+  const targetArray = current[lastKey];
+
+  // If it's an array, find the index of the specific item
+  if (Array.isArray(targetArray)) {
+    const index = targetArray.findIndex(findFn);
+    
+    if (index !== -1) {
+      // splice(index, 1) removes the item and returns an array containing it
+      return targetArray.splice(index, 1)[0];
+    }
+  }
+
+  return null;
+}
+
+  updateJSONData(path: string[], findFn: (item: any) => boolean, newValue: any): void {
+    const keys = [...path];
+    const lastKey = keys.pop();
+    if (!lastKey) return;
+
+    let current = this.JSONData as any;
+
+    // Traverse to find the parent object
+    for (const key of keys) {
+      if (current[key] === undefined || current[key] === null) return;
+      current = current[key];
+    }
+
+    const targetArray = current[lastKey];
+
+    if (Array.isArray(targetArray)) {
+      const index = targetArray.findIndex(findFn);
+      if (index !== -1) {
+        // Merge existing item with new values (like completed: true)
+        targetArray[index] = { ...targetArray[index], ...newValue };
+      }
+    }
+  }
+
+
+
+
 
   // --------------------------------------------------
   // ============= USER MANAGEMENT ====================
