@@ -1,40 +1,45 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// List of API keys in order
 const API_KEYS = [
   process.env.GEMINI_API_KEY,
   process.env.GEMINI_API_KEY_B,
   process.env.GEMINI_API_KEY_C,
   process.env.GEMINI_API_KEY_D,
   process.env.GEMINI_API_KEY_E
-
-];
+].filter(Boolean); // remove undefined keys
 
 async function generalbot(message, context) {
-  for (let i = 0; i < API_KEYS.length; i++) {
+  let remainingKeys = [...API_KEYS];
+
+  while (remainingKeys.length > 0) {
+    // pick random index
+    const randomIndex = Math.floor(Math.random() * remainingKeys.length);
+    const selectedKey = remainingKeys[randomIndex];
+
     try {
-      const genAI = new GoogleGenerativeAI(API_KEYS[i]);
+      const genAI = new GoogleGenerativeAI(selectedKey);
       const model = genAI.getGenerativeModel({
         model: "gemini-2.5-flash",
-        // This is your 'context' or persona
         systemInstruction: context,
       });
+
       const result = await model.generateContent(message);
       const response = await result.response;
       const text = await response.text();
 
-      // If successful, return the response
       return text;
-    } catch (err) {
-      console.error(`Gemini API error with key ${i + 1}:`, err.message);
 
-      // If last key, throw error
-      if (i === API_KEYS.length - 1) {
+    } catch (err) {
+      console.error(`Error with key:`, err.message);
+
+      // remove the failed key so it won't be reused
+      remainingKeys.splice(randomIndex, 1);
+
+      if (remainingKeys.length === 0) {
         return "Generative AI Error: All API keys exhausted.";
       }
 
-      // Otherwise, try next key
-      console.log("Trying next API key...");
+      console.log("Retrying with another random key...");
     }
   }
 }
@@ -45,7 +50,7 @@ exports.aiTXTGenerator = async (req, res) => {
     const botresponse = await generalbot(message, context);
     res.status(201).json({ message: botresponse });
   } catch (error) {
-    console.error("Error handling /process/aiTXTGenerator request:", error);
+    console.error("Error handling request:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
