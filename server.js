@@ -1,3 +1,115 @@
+/*
+all returns a boolean success and message
+
+//Auth
+Frontend {
+    signup(id, password, role = null, contact = null) return null
+    login(id, password) return null
+    logout() return null
+    accessToken() return token
+    refreshToken() return null
+} Backend {
+    /auth/signup
+    /auth/login
+    /auth/refreshToken
+}
+
+//User Management
+Frontend {
+    X = id, password, role, contact
+    (get|set|push|pop)(Self|Other)(X|All) [if get return X else null]
+} Backend {
+    X = id, password, role, contact
+    /user/(get|set|push|pop)(Self|Other)(X|All)
+}
+
+//Data Management
+Frontend {
+    (get|set|remove)Item(app, collectionName, collectionKey, key, (null|value|value)) [if get return json else null]
+    (get|set|remove|push|pop)JSONItem(app, collectionName, collectionKey, key, (null|value|value|path|path))
+} Backend {
+    /getItem
+    /setItem
+    /removeItem    
+}
+
+//Process
+//generative
+Frontend {
+    generateTXT(message, context) return message
+    generateJSON(howMany, expectedJSON) return JSON
+} Backend {
+    /process/generator/generateTXT
+    /process/generator/generateJSON
+}
+//agent
+Frontend {
+    generateDECISION(what, data) return JSON
+} Backend {
+    /process/agent/generateDECISION
+}
+//query
+Frontend {
+    filter(arrorjson, logic) return arrorjson
+    search(arrorjson, logic) return arrorjson
+    sort(arrorjson, logic) return arrorjson
+    paginate(arrorjson, logic) return arrorjson
+} Backend {
+    //None
+}
+//automation
+Frontend {
+    automate(what, data) return JSON
+} Backend {
+    /process/automate
+}
+//event
+Frontend {
+    emit
+    listen
+    handle
+} Backend {
+    //None
+}
+//communication
+Frontend {
+    send(what, data)
+} Backend {
+    /process/send
+}
+//file process
+Frontend {
+    (get|set|remove)File(app, collectionName, collectionKey, key, (null|value|value)) [if get return file else null]
+} Backend {
+    /process/getFile
+    /process/setFile
+    /process/removeFile
+}
+//security
+Frontend {
+    security(what, data) return JSON
+} Backend {
+    /process/security
+}
+//analytical
+Frontend {
+    analytics(what, data) return JSON
+} Backend {
+    /process/analytics
+}
+//integration
+Frontend {
+    integrateWebhook(what, data) return JSON
+    integrateExternalApi(what, data) return JSON
+    integrateWebSocket(what, data) return JSON
+} Backend {
+    /process/integration/integrateWebhook
+    /process/integration/integrateApi
+    /process/integration/integrateWebSocket
+}
+
+*/
+
 require('dotenv').config(); //environment variables
 const mongoose = require('mongoose'); //connect to mongodb
 const session = require('express-session');
