@@ -5,7 +5,12 @@ const API_KEYS = [
   process.env.GEMINI_API_KEY_B,
   process.env.GEMINI_API_KEY_C,
   process.env.GEMINI_API_KEY_D,
-  process.env.GEMINI_API_KEY_E
+  process.env.GEMINI_API_KEY_E,
+  process.env.GEMINI_API_KEY_F,
+  process.env.GEMINI_API_KEY_G,
+  process.env.GEMINI_API_KEY_H,
+  process.env.GEMINI_API_KEY_I,
+  process.env.GEMINI_API_KEY_J,
 ].filter(Boolean); // remove undefined keys
 
 async function generalbot(message, context) {

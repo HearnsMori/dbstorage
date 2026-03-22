@@ -1,6 +1,3 @@
-//To Do
-//None
-
 require('dotenv').config(); //environment variables
 const mongoose = require('mongoose'); //connect to mongodb
 const session = require('express-session');
@@ -32,60 +29,70 @@ app.use(express.json({limit: '1mb'}));
 app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 app.get('/', (req, res) => {
-    res.send(`Updated 2026 March 11
-        # - endpoint
-        #getItem
-        in: app, collectionName, collectionKey, key, value
-        out: [app[collectionName[collectionKey, key: value]]]
-        #(setItem | removeItem)
-        in: app, collectionName, collectionKey, key, value
-        out: message, (affected | denied)
-        /auth
-        /user
-        /role
-        /process
-    `);
+    res.send(`<pre>Updated 2026 March 22
+        \n
+        \n#getItem
+        \nin: app, collectionName, collectionKey, key, value
+        \nout: [app[collectionName[collectionKey, key: value]]]
+        \n
+        \n#(setItem | removeItem)
+        \nin: app, collectionName, collectionKey, key, value
+        \nout: message, (affected | denied)
+        \n
+        \n/auth
+        \n/user
+        \n/role
+        \n/process
+    </pre>`);
 });
 
 app.get('/auth', (req, res) => {
-    res.send(`Updated 2026 March 11
-        #signup
-        in: id, password, contact
-        out: message, id
-        #signin
-        in: id, password
-        out: message, accessToken, refreshToken
-        #refreshToken
-        in: token
-        out: message, accessToken, refreshToken
-        #recover
-        in: id, contact
-        out: message
-    `);
+    res.send(`<pre>Updated 2026 March 22
+        \n
+        \n#signup
+        \nin: id, password, contact
+        \nout: message, id
+        \n
+        \n#signin
+        \nin: id, password
+        \nout: message, accessToken, refreshToken
+        \n
+        \n#refreshToken
+        \nin: token
+        \nout: message, accessToken, refreshToken
+        \n
+        \n#recover
+        \nin: id, contact
+        \nout: message
+    </pre>`);
 });
 
 app.get('/user', (req, res) => {
-    res.send(`Updated 2026 March 11
-        #get(Self | Other)X
-        in: X
-        out: (self | other)X
-        #(set | push | pop)(Self | Other)X
-        in: (success | error)
-    `);
+    res.send(`<pre>Updated 2026 March 22
+        \n
+        \n#get(Self | Other)X
+        \nin: X
+        \nout: (self | other)X
+        \n
+        \n#(set | push | pop)(Self | Other)X
+        \nin: (success | error)
+    </pre>`);
 });
 
 app.get('/role', (req, res) => {
-    res.send(`Updated 2026 March 11
-        #soon
-    `);
+    res.send(`<pre>Updated 2026 March 11
+        \n
+        \n#soon
+    </pre>`);
 });
 
 app.get('/process', (req, res) => {
-    res.send(`Updated 2026 March 11
-        /generator/aiTXTGenerator
-        in: message
-        out: (message | error)
-    `);
+    res.send(`<pre>Updated 2026 March 11
+        \n
+        \n/generator/aiTXTGenerator
+        \nin: message
+        \nout: (message | error)
+    </pre>`);
 });
 
 app.use('/', apiLimiter, require('./routes/storage'));
