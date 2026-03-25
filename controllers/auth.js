@@ -147,6 +147,26 @@ exports.recover = async (req, res) => {
     }
 };
 
+exports.mfa = async (req, res) => {
+    try {
+        return res.status(200).json({
+            message: "Signin successful",
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Signin failed", error });
+    }
+};
+
+exports.sessions = async (req, res) => {
+    try {
+        return res.status(200).json({
+            message: "Signin successful",
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Signin failed", error });
+    }
+};
+
 // =====================
 // SIGNUP ROLE
 // =====================

@@ -2,12 +2,16 @@
 //To be implemented in future
 const express = require('express');
 const router = express.Router();
-const aiJSONGenerator = require('../controllers/process/generator/aiJSONGenerator');
-const aiTXTGenerator = require('../controllers/process/generator/aiTXTGenerator');
 
-//Doesn't need an account
-router.post('/generator/aiJSONGenerator', aiJSONGenerator.aiJSONGenerator);
-router.post('/generator/aiTXTGenerator', aiTXTGenerator.aiTXTGenerator);
+// No Account Needed
+router.use('/generative', require('./process/generative'));
+router.use('/agent', require('./process/agent'));
+// Account Needed
+router.use('/automation', require('./process/'));
+router.use('/communication', require('./process/'));
+router.use('/file', require('./process/'));
+router.use('/security', require('./process/'));
+router.use('/analytics', require('./process/'));
+router.use('/integration', require('./process/'));
 
 module.exports = router;
-

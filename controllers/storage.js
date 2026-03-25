@@ -280,3 +280,14 @@ exports.removeItem = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+
+//===============
+//AUDIT ESSENTIAL
+//===============
+
+exports.auditEssential = async (req, res) => {
+    if (!req.user?.id)
+        return res.status(401).json({ error: 'token expired' });
+    return res.status(401).json({ error: 'token expired' });
+}

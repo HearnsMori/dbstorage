@@ -253,3 +253,20 @@ exports.popOtherRole = async (req, res) => {
 exports.popOtherContact = async (req, res) => {
     res.status(400).json({ error: 'Cannot set other auth info' });
 };
+
+exports.accountDelete = async (req, res) => {
+    res.status(400).json({ error: 'Cannot set other auth info' });
+};
+
+exports.accountDeactivate = async (req, res) => {
+    res.status(400).json({ error: 'Cannot set other auth info' });
+};
+
+exports.accountReactivate = async (req, res) => {
+    res.status(400).json({ error: 'Cannot set other auth info' });
+};
+
+exports.createRole = async (req, res) => {
+    res.status(400).json({ error: 'Cannot set other auth info' });
+};
+
