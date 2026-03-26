@@ -11,7 +11,6 @@ Model {
     //Data Management
     Storage {
         storageId:
-        universe:
         platform:
         organization:
         company:
@@ -26,7 +25,7 @@ Model {
         organization:
         app:
         collection:
-        documentId:
+        storageId:
         action:
         changedFields:
         before:
@@ -34,7 +33,7 @@ Model {
         performedBy:
         timestamp:
         reason:
-        metadata:
+        ipAddress:
     }
     //Auth and User Management
     User {
@@ -148,7 +147,7 @@ Frontend {
 //Auth
 Frontend {
     signup(id, password, role = null, contact = null) return null
-    login(id, password) return null
+    login(id, password, [userData.key]) return null
     logout() return null
     accessToken() return token
     refreshToken() return null
@@ -156,30 +155,31 @@ Frontend {
     mfa()
     sessions()
 } Backend {
+    POST
     /auth/signup
     /auth/login
     /auth/refresh-token
     /auth/recover
-    /auth/mfa
-    /auth/sessions
+
+    PUT /auth/mfa
+    DELETE /auth/sessions
 
     for signup create public key
     then when login return public key and salted password
     in frotend regenerate the private key using the salted password
     now u have private and public key
-    
 }
 
 //User Management
 Frontend {
-    X = id, password, role, contact
+    X = userId, userPasswordHash, userRole, userData
     (get|set|push|pop)(Self|Other)(X|All) [if get return X else null]
     accountReactivate()
     accountDeactivate()
     accountDelete()
     createRole()
 } Backend {
-    X = id, password, role, contact
+    X = userId, userPasswordHash, userRole, userData
     GET /user/(self|other)-(X|all)
     POST /user/(self|other)-(X|all)
     /user/account-reactivate
