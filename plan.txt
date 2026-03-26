@@ -1,0 +1,296 @@
+Model:
+
+Controller:
+Storages
+Users
+Processes
+Communications
+Integrations
+
+Routes:
+
+Target:
+Control
+
+Principle:
+name file in camel case,
+make it descriptive,
+avoid same name file
+
+Model {
+    //Data Management
+    Storage {
+        storageId:
+        platform:
+        organization:
+        company:
+        app:
+        collection:
+        document:
+        getAccess:
+        setAccess:
+        removeAccess:
+    }
+    //Audit Essential
+    AuditLog {
+        auditId:
+        model:
+        platform:
+        organization:
+        app:
+        collection:
+        storageId:
+        userId:
+        action:
+        changedFields:
+        before:
+        after:
+        performedBy:
+        timestamp:
+        reason:
+        ipAddress:
+    }
+    //Auth and User Management
+    User {
+        userId:
+        userPasswordHash:
+        mfa:
+        links:
+        userData:
+        userRole:
+        status:
+        createdAt:
+        lastLogin:
+        publicKey:
+    }
+    Role {
+        roleId:
+        rolePasswordHash:
+        user:
+        allowedToPushUser:
+        allowedToPopUser:
+    }
+
+    //Generative
+    //Agent   
+    //Query
+    No Additional Models Needed
+
+    //Automation
+    //Event
+    Process {
+        processId:
+        getAccess:
+        setAccess:
+        removeAccess:
+        data:
+    }
+
+    //Communication
+    Communication {
+        communicationId:
+        getAccess:
+        setAccess:
+        removeAccess:
+        data: [{
+            who:
+            data:
+        }]
+    }
+
+    //File Process
+    No Data Needed
+
+    //Security
+    AuditLog
+
+    //Analytical
+    AuditLog
+
+    //Integration
+    Webhook for:
+        external etc
+    WebSocket for:
+        Communication
+        Process
+        Storage
+}
+
+API ENDPOINT =
+RESOURCES BASED, 
+SNAKE CASE,
+PLURAL NOUN;
+MODEL = CAMEL CASE;
+METHOD =
+GET: retrieve,
+POST: create new,
+PATCH: update,
+PUT: overwrite create/update,
+DELETE: delete;
+HEADER =
+Authorization: Bearer <token>,
+Content-Type: application/json,
+Accept: application/json
+return = ({
+	success: Boolean,
+	message: String,
+	error: { code, details } | Null,
+	meta: {Any} | Null,
+	data: {Any} | Null,
+});
+
+//Data Management and Audit Essentials
+Frontend {
+	String | ArrayOfString = app, collectionName, collectionKey, key, getAccess, setAccess, removeAccess, path;
+	ArrayOfAny = value;
+	JSONOfAny = data;
+    getItem(app, collectionName, collectionKey, key);
+	= JSON of app.collectionName.key | app.collectionName.collectionKey;
+    setItem(app, collectionName, collectionKey, key, value, getAccess, setAccess, removeAccess);
+    removeItem(app, collectionName, collectionKey, key, value);
+    loadJSONItem(app, collectionName, collectionKey, key, value);
+    saveJSONItem();
+    setJSONItem(path, value);
+    removeJSONItem(path, value);
+    pushJSONItem(path, value);
+    popJSONItem(path, value);
+    auditEssential(data);
+} Backend {
+    GET, POST, PATCH, PUT, DELETE
+    /api/v1/storages/:platform/:organization/:company/:app/:collection/:key
+}
+
+//Auth
+Frontend {
+    signup(id, password, role = null, contact = null) return null
+    login(id, password, [userData.key]) return null
+    logout() return null
+    accessToken() return token
+    refreshToken() return null
+    recover()
+    mfa()
+    sessions()
+} Backend {
+    POST
+    /auths/signup
+    /auths/login
+    /auths/refresh-token
+    /auths/recover
+
+    PUT /auths/mfa
+    DELETE /auths/sessions
+
+    for signup create public key
+    then when login return public key and salted password
+    in frotend regenerate the private key using the salted password
+    now u have private and public key
+}
+
+//User Management
+Frontend {
+    X = userId, userPasswordHash, userRole, userData
+    (get|set|push|pop)(Self|Other)(X|All) [if get return X else null]
+    accountReactivate()
+    accountDeactivate()
+    accountDelete()
+    createRole()
+} Backend {
+    X = userId, userPasswordHash, userRole, userData
+    GET /users/(self|other)/(X|all)
+    POST /users/(self|other)/(X|all)
+    /users/account-reactivate
+    /users/account-deactivate
+    /users/account-delete
+    /users/create-role
+}
+
+
+//Process
+//generative
+Frontend {
+    generateTXT(message, context) return message
+    generateJSON(howMany, expectedJSON) return JSON
+} Backend {
+    POST /processes/generators/generate-txt
+    POST /processes/generators/generate-json
+}
+//agent
+Frontend {
+    generateDECISION(what, data) return JSON
+} Backend {
+    POST /processes/agents/generate-decision
+}
+//query
+Frontend {
+    filter(arrorjson, logic) return arrorjson
+    search(arrorjson, logic) return arrorjson
+    sort(arrorjson, logic) return arrorjson
+    paginate(arrorjson, logic) return arrorjson
+} Backend {
+    //None
+}
+//automation
+//event
+Frontend {
+    automate(what, data) return JSON
+} Backend {
+    GET /processes/automations/:processId
+    POST /processes/automations/:processId
+    PATCH /process/automations/:processId
+    PUT /process/automations/:processId
+    DELETE /process/automations/:processId
+}
+
+//communication
+Frontend {
+    send(what, data)
+} Backend {
+    GET /processes/communications/:communicationId
+    POST /processes/communications/:communicationId
+    PATCH /processes/communications/:communicationId
+    DELETE /processes/communications/:communicationId
+}
+//file process
+Frontend {
+    (get|set|remove)File(app, collectionName, collectionKey, key, (null|value|value)) [if get return file else null]
+} Backend {
+    GET /processes/files/:fileId
+    POST /processes/files/:fileId
+    PATCH /processes/files/:fileId
+    PUT /processes/files/:fileId
+    DELETE /processes/files/:fileId
+}
+//security
+Frontend {
+    security(what, data) return JSON
+    encode(data, receiverPublicLock);
+    decode(data, receiverPrivateLock);
+} Backend {
+    GET /processes/securities/e2ee/storage/:storageId
+    POST /processes/securities/e2ee/storage/:storageId
+    PATCH /processes/securities/e2ee/storage/:storageId
+    PUT /processes/securities/e2ee/storage/:storageId
+    DELETE /processes/securities/e2ee/storage/:storageId
+    /processes/securities/security
+}
+//analytical
+Frontend {
+    analytics(what, data) return JSON
+} Backend {
+    /processes/analytics/analytics
+}
+//integration
+Frontend {
+    integrateWebhook(what, data) return JSON
+    integrateExternalApi(what, data) return JSON
+    integrateWebSocket(what, data) return JSON
+} Backend {
+    POST /processes/integrations/integrate-webhooks
+        /:external
+    POST /processes/integrations/integrate-websockets
+        /storages
+        /processes/communications
+        /processes/files
+}
+
+Frontend:

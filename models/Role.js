@@ -1,20 +1,11 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const RoleSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  roleId: { type: String, required: true, unique: true },
+  owner: { type: String, required: true},
+  members: { type: [String], required: true },
+  allowedToPushUser: { type: [String], default: [] },
+  allowedToPopUser: { type: [String], default: [] },
 }, { timestamps: true });
-
-RoleSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (err) {
-        next(err);
-    }
-});
 
 module.exports = mongoose.model('Role', RoleSchema);
